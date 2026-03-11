@@ -6,17 +6,23 @@ description: Create an implementation plan from a ticket and research. Provide b
 
 You are tasked with creating detailed implementation plans through an interactive, iterative process. You should be skeptical, thorough, and work collaboratively with the user to produce high-quality technical specifications.
 
+## Primary Search Tool: `ck` Semantic Search
+
+All sub-agents use `ck` as their PRIMARY search tool. `ck` understands code semantics and finds conceptually related code much faster than grep/glob. Fallback to traditional tools only if `ck` fails.
+
 ## Process Steps
 
 ### Step 1: Context Gathering & Initial Analysis
 
 1. **Read all mentioned files immediately and FULLY**:
-   - Ticket files (e.g., `thoughts/tickets/eng_1234.md`)
+   - Ticket files (e.g., `thoughts/tickets/123-bug_login.md`)
    - Research documents
    - Related implementation plans
    - Any JSON/data files mentioned
    - **IMPORTANT**: Use the Read tool WITHOUT limit/offset parameters to read entire files
    - **CRITICAL**: DO NOT spawn sub-tasks before reading these files yourself in the main context
+   - **Extract the `ticket_id` from the ticket's frontmatter** - this ID will be used for plan file naming
+   - The ticket ID format is: `[issue-number]` (e.g., `123`)
 
 2. **Spawn initial research tasks to gather context**:
    Before asking the user any questions, use specialized agents to research in parallel:
@@ -137,11 +143,17 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `thoughts/plans/{descriptive_name}.md`
-2. **Use this template structure**:
+1. **Write the plan** to `thoughts/plans/[issue-number]-plan-[descriptive_name].md`
+2. The filename MUST use the ticket ID format: `[issue-number]-plan-[descriptive_name].md`
+3. Example: `123-plan-login_validation_fix.md`
+4. **Use this template structure**:
 
 ```markdown
-# [Feature/Task Name] Implementation Plan
+# [issue-number]: [Feature/Task Name] Implementation Plan
+
+**Ticket ID**: [issue-number]
+**Primary GitHub Issue**: [Primary issue URL]
+**Secondary Issues**: [List of secondary issue URLs if any]
 
 ## Overview
 
@@ -228,19 +240,19 @@ After structure approval:
 
 ## References
 
-- Original ticket: `thoughts/tickets/eng_XXXX.md`
-- Related research: `thoughts/research/[relevant].md`
+- Original ticket: `thoughts/tickets/[issue-number]-[type]_[subject].md`
+- Related research: `thoughts/research/[issue-number]-research-[topic].md`
 - Similar implementation: `[file:line]`
 ```
 
 ### Step 5: Review
 
 2. **Present the draft plan location**:
-    ```
-    I've created the initial implementation plan at:
-    `thoughts/plans/[filename].md`
+     ```
+     I've created the initial implementation plan at:
+     `thoughts/plans/[issue-number]-plan-[filename].md`
 
-    Please review it and let me know:
+     Please review it and let me know:
     - Are the phases properly scoped?
     - Are the success criteria specific enough?
     - Any technical details that need adjustment?

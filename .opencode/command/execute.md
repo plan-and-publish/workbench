@@ -40,6 +40,61 @@ If you encounter a mismatch:
   - **Date/Time**: [when the deviation was made]
   ```
 
+## Git Branch Management
+
+Before making any code changes, you MUST set up the proper git branch for each repository:
+
+### Step 0: Repository Setup (CRITICAL - Do this FIRST)
+
+For each repository that will be modified during execution:
+
+1. **Extract the ticket ID and issue name** from the plan file:
+   - Ticket ID format: `[issue-number]` (e.g., `123`)
+   - Issue name: derived from the ticket subject (without markup or invalid characters)
+   - Branch name format: `feature/[issue-number]-[issue-name]`
+   - Example: `feature/123-fix-login-validation`
+
+2. **Navigate to the repository** in the `projects/` folder
+
+3. **Stash any uncommitted changes and reset to main**:
+   ```bash
+   # Check current status
+   git status
+   
+   # Stash any changes if present
+   git stash push -m "stash-for-[branch-name]-$(date +%Y%m%d%H%M%S)"
+   
+   # Reset to main branch
+   git checkout main
+   git pull origin main
+   ```
+
+4. **Check for existing branch and create new branch**:
+   ```bash
+   # Check if branch already exists
+   git branch -a | grep "feature/[issue-number]-[issue-name]"
+   
+   # If branch exists, add a number suffix
+   # Example: feature/123-fix-login-validation-2
+   
+   # Create new feature branch
+   git checkout -b feature/[issue-number]-[issue-name]
+   ```
+
+5. **Repeat for each affected repository**
+
+## Commit Message Format
+
+All commits MUST follow this format:
+```
+#[issue-number]-[change-title-or-quick-description]
+```
+
+Examples:
+- `#123-add-validation-error-message`
+- `#123-update-auth-service`
+- `#45-add-dashboard-component`
+
 ## Verification Approach
 
 After implementing a phase:
@@ -70,23 +125,33 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
 
 ## Steps
 
-1. **Read the plan completely** and check for any existing checkmarks (- [x]). Only read the plan file provided as an argument.
+1. **Read the plan completely** and check for any existing checkmarks (- [x]). Only read the plan file provided as an argument. Extract the `ticket_id` from the plan.
 
 2. **Read the original ticket and all files mentioned in the plan**. Read files fully - never use limit/offset parameters, you need complete context. If you have trouble understanding the plan, refer to the research and ticket information.
 
-3. **Consider the steps involved in the plan**. Think deeply about how the pieces fit together and derive a detailed todo list from the plan's phases and requirements.
+3. **Identify all repositories that will be modified** based on the plan. For each repository:
+   - Follow the Git Branch Management steps (Step 0 above)
+   - Stash changes, reset to main, and create feature branch
+   - Document the branch name created
 
-4. **Implement each phase sequentially**, adapting to what you find while following the plan's intent.
+4. **Consider the steps involved in the plan**. Think deeply about how the pieces fit together and derive a detailed todo list from the plan's phases and requirements.
 
-5. **Verify each phase** using the success criteria checks (usually `bun run check` covers everything). Fix any issues before proceeding.
+5. **Implement each phase sequentially**, adapting to what you find while following the plan's intent.
 
-6. **Update the plan file** with checkmarks for completed items using the Edit tool.
+6. **Create commits with proper format** as you complete logical units of work:
+   - Commit message format: `#[issue-number]-[change-title-or-quick-description]`
+   - Group related changes into single commits
+   - Use the ticket ID from the plan in every commit
 
-7. **Handle any mismatches or issues** by presenting them clearly and asking for guidance if needed.
+7. **Verify each phase** using the success criteria checks (usually `bun run check` covers everything). Fix any issues before proceeding.
 
-8. **Update ticket status** to 'implemented' by editing the ticket file's frontmatter.
+8. **Update the plan file** with checkmarks for completed items using the Edit tool.
 
-Use the todowrite tool to create a structured task list for the 8 steps above, marking each as pending initially. Note that Step 3 may expand into multiple implementation subtasks derived from the plan.
+9. **Handle any mismatches or issues** by presenting them clearly and asking for guidance if needed.
+
+10. **Update ticket status** to 'implemented' by editing the ticket file's frontmatter.
+
+Use the todowrite tool to create a structured task list for the 10 steps above, marking each as pending initially. Note that Step 4 may expand into multiple implementation subtasks derived from the plan.
 
 **plan**
 
