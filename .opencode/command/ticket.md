@@ -11,7 +11,14 @@ You create well-structured tickets that provide maximum context for downstream r
 
 ## Process Overview
 
-### Step 1: Initial Analysis & Type Determination
+### Step 1: Linear Context & Hierarchy Identification
+1. **Determine Parent or Existing Issue**:
+   - If the user provides an **existing issue ID** (e.g., `PAP-123`), use the Linear MCP to thoroughly read that issue and use its information for creating the context of this ticket. You will overwrite this existing issue when creating the final ticket. **You do not need to ask for a parent project or issue in this case.**
+   - If the user is creating a **new issue**, and does not provide a **parent project ID** or **parent issue**, **you must explicitly ask the user** for one before proceeding.
+   - Once a parent is provided for a new issue, use the Linear MCP to read it to get more knowledge about the context. Do not duplicate high-level content from the parent unless absolutely necessary. The new issue will be a child of this parent project or issue.
+   *(Note: The ticket itself does not need to contain information about parents or overriding an issue; this is handled in Linear and is purely context for you.)*
+
+### Step 2: Initial Analysis & Type Determination
 1. **Analyze user request** to determine ticket type:
    - **bug**: Something broken, unexpected behavior, errors
    - **feature**: New functionality or enhancement
@@ -22,7 +29,7 @@ You create well-structured tickets that provide maximum context for downstream r
    - Error messages, symptoms, behaviors
    - Technologies, libraries, or services mentioned
 
-### Step 2: Interactive Question Flow
+### Step 3: Interactive Question Flow
 Ask specific, targeted questions based on ticket type to gather comprehensive context. **Present questions in a numbered format** for clarity:
 
 #### For Bug Tickets:
@@ -51,7 +58,7 @@ Ask specific, targeted questions based on ticket type to gather comprehensive co
 5. Any specific patterns or anti-patterns to address?
 6. Should this include tests or documentation updates?
 
-### Step 3: Scope Boundary Exploration
+### Step 4: Scope Boundary Exploration
 **CRITICAL STEP**: This iterative process should be repeated at least 2-3 times to thoroughly explore scope boundaries. Do not rush through this step - the quality of the final ticket depends on clearly defined scope.
 
 After receiving initial responses, analyze how these answers impact the original user query and generate 5-10 follow-up questions to drill down for more clarification.
@@ -106,7 +113,7 @@ Follow-up questions (Round 2):
 - No more meaningful expansion questions can be generated
 - User can confidently describe the final scope
 
-### Step 4: Context Extraction for Research
+### Step 5: Context Extraction for Research
 Extract and organize information specifically for the research phase:
 
 **Keywords for Search:**
@@ -127,13 +134,22 @@ Extract and organize information specifically for the research phase:
 - Performance constraints
 - Security requirements
 
-### Step 5: Ticket Creation
-Create the ticket file at: `thoughts/tickets/type_subject.md`
+### Step 6: Ticket Creation & Linear Integration
+1. **Create or Update in Linear**:
+   - Save the ticket in LinearApp as an issue using the Linear MCP.
+   - The Linear issue description must be the **full content of the ticket including the frontmatter**, not just a summary.
+   - If an existing issue ID was provided, overwrite that existing issue.
+   - If a parent project or issue was provided, ensure the new issue is linked appropriately as a child.
+2. **Keep a Local Copy**:
+   - Once the Linear issue is created/updated, use the generated or existing Linear Issue ID (e.g., `PAP-123`) as a prefix for the local filename.
+   - Create the local ticket file at: `thoughts/tickets/[Linear_Issue_ID]_<type>_<subject>.md`
 
 Use this template structure:
 
 ```markdown
 ---
+issue_id: [Linear Issue ID]
+issue_url: [Linear Issue URL]
 type: [bug|feature|debt]
 priority: [high|medium|low]
 created: [ISO date]
@@ -143,7 +159,7 @@ keywords: [comma-separated keywords for research]
 patterns: [comma-separated patterns to search for]
 ---
 
-# [TYPE-XXX]: [Descriptive Title]
+# [Linear Issue ID]: [Descriptive Title]
 
 ## Description
 [Clear, comprehensive description of the issue/feature/debt]
@@ -201,16 +217,16 @@ patterns: [comma-separated patterns to search for]
 [Any additional notes or questions for research/planning]
 ```
 
-### Step 6: Validation & Confirmation
+### Step 7: Validation & Confirmation
 Before finalizing:
 1. **Review completeness**: Ensure all critical information is captured
 2. **Validate logic**: Check that requirements are clear and achievable
 3. **Confirm research hooks**: Verify keywords and patterns will be useful for research
 4. **Check scope**: Ensure the ticket is atomic and well-scoped
 
-### Step 7: Update ticket status to 'created' by editing the ticket file's frontmatter.
+### Step 8: Update ticket status to 'created' by editing the local ticket file's frontmatter and syncing with Linear.
 
-Use the todowrite tool to create a structured task list for the 7 steps above, marking each as pending initially.
+Use the todowrite tool to create a structured task list for the 8 steps above, marking each as pending initially.
 
 ## Important Guidelines
 
@@ -233,17 +249,19 @@ Use the todowrite tool to create a structured task list for the 7 steps above, m
 - **Research-friendly**: Include specific hooks for research agents
 
 ### File Naming
-- Use format: `<type>_<subject>.md`
+- Use format: `[Linear_Issue_ID]_<type>_<subject>.md`
 - Examples:
-  - `bug_login_validation.md`
-  - `feature_user_dashboard.md`
-  - `debt_auth_refactor.md`
+  - `PAP-101_bug_login_validation.md`
+  - `PAP-102_feature_user_dashboard.md`
+  - `PAP-103_debt_auth_refactor.md`
 
 ## Examples
 
 ### Bug Ticket Example
 ```
 ---
+issue_id: PAP-101
+issue_url: https://linear.app/pap/issue/PAP-101
 type: bug
 priority: high
 created: 2025-01-15T10:30:00Z
@@ -254,7 +272,7 @@ keywords: [login, validateCredentials, error message, authentication]
 patterns: [error handling, validation logic, user feedback]
 ---
 
-# BUG-001: Login validation error message not displayed
+# PAP-101: Login validation error message not displayed
 
 ## Description
 When users enter invalid credentials, the login fails but no error message is shown to the user, leaving them confused about what went wrong.
@@ -306,6 +324,8 @@ Clear error message displayed when credentials are invalid
 ### Feature Ticket Example
 ```
 ---
+issue_id: PAP-102
+issue_url: https://linear.app/pap/issue/PAP-102
 type: feature
 priority: medium
 created: 2025-01-15T14:20:00Z
@@ -316,7 +336,7 @@ keywords: [dashboard, analytics, chart, metrics]
 patterns: [data visualization, real-time updates, responsive design]
 ---
 
-# FEATURE-002: Add analytics dashboard for user metrics
+# PAP-102: Add analytics dashboard for user metrics
 
 ## Description
 Create a new dashboard page where users can view key metrics about their account usage, including activity charts, usage statistics, and performance indicators.
