@@ -159,7 +159,8 @@ keywords: [comma-separated keywords for research]
 patterns: [comma-separated patterns to search for]
 ---
 
-# [Linear Issue ID]: [Descriptive Title]
+# [Linear Issue ID]: [Descriptive Title] 
+*(Note: The title must be between 3 and 5 words, meaningful, and related to the issue, as it will be used to create the Git feature branch)*
 
 ## Description
 [Clear, comprehensive description of the issue/feature/debt]
