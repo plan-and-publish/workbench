@@ -1,19 +1,22 @@
 ---
-description: Research a ticket or provide a prompt for ad-hoc research. It is best to run this command in a new session.
+description: Research a Linear issue. Provide a Linear issue ID as the argument. Best run in a new session.
 ---
 
 # Research Codebase
 
 You are tasked with conducting comprehensive research across the codebase to answer user questions by spawning tasks and synthesizing their findings.
 
-The user will provide a ticket for you to read and begin researching.
+The user will provide a Linear issue ID. You will fetch the ticket from Linear and research the codebase accordingly.
 
 ## Steps to follow after receiving the research query:
 
-1. **Read the ticket first:**
-   - **IMPORTANT**: Use the Read tool WITHOUT limit/offset parameters to read entire files
-   - **CRITICAL**: Read these files yourself in the main context before spawning any sub-tasks
-   - This ensures you have full context before decomposing the research
+1. **Check status-ticket label and fetch the ticket:**
+   - Call `linear_get_issue` with the provided issue ID
+   - Inspect the `labels[]` array. If the `status-ticket` group value is NOT `open`, surface this to the user:
+     > "The status-ticket label is currently `{value}`, not `open`. Research is intended to run after the ticket phase. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the label is not `open`
+   - Read the issue `description` field — this is the ticket content
+   - **IMPORTANT**: Do not read the ticket from any local file. The Linear issue description is the sole source of truth.
 
 2. **Detail the steps needed to perform the research:**
     - Break down the user's ticket into composable research areas
@@ -66,64 +69,62 @@ The user will provide a ticket for you to read and begin researching.
 
 5. **Gather metadata for the research document:**
 
-Use the following metadata for the research document frontmatter:
+Use the following metadata for the research document body:
 
-**metadata for frontmatter**
+**metadata**
 
-!`agentic metadata`
+- Date: !`date -Iseconds`
+- Branch: !`git branch --show-current`
+- Commit: !`git rev-parse HEAD`
+- Repository: !`basename $(git rev-parse --show-toplevel)`
 
 6. **Generate research document:**
-   - Filename: `thoughts/research/date_topic.md`
-   - Use the metadata gathered in step 5, mapping XML tags to frontmatter fields
-   - Structure the document with YAML frontmatter followed by content:
+   - Filename: `thoughts/research/{issue_id}_{topic}.md`
+     (e.g. `thoughts/research/PAP-7003_linear_integration.md`)
+   - Write the local file using the Write tool
+   - Structure WITHOUT YAML frontmatter — use a Metadata section in the body:
+
      ```markdown
-     ---
-     date: [Current date and time with timezone in ISO format]
-     git_commit: [from metadata]
-     branch: [from metadata]
-     repository: [from metadata]
-     topic: "[User's Question/Topic]"
-     tags: [research, codebase, relevant-component-names]
-     last_updated: [from metadata]
-     ---
+     # Research: [Topic]
+
+     ## Metadata
+     - Date: [from step 5]
+     - Branch: [from step 5]
+     - Commit: [from step 5]
+     - Repository: [from step 5]
 
      ## Ticket Synopsis
-     [Synopsis of the ticket information]
+     [Synopsis of the ticket]
 
      ## Summary
-     [High-level findings answering the user's question]
+     [High-level findings]
 
      ## Detailed Findings
 
      ### [Component/Area 1]
-     - Finding with reference ([file.ext:line])
-     - Connection to other components
-     - Implementation details
-
-     ### [Component/Area 2]
-     - Finding with reference ([file.ext:line])
-     - Connection to other components
-     - Implementation details
-     ...
+     - Finding with reference (`file.ext:line`)
 
      ## Code References
-     - `path/to/file.py:123` - Description of what's there
-     - `another/file.ts:45-67` - Description of the code block
+     - `path/to/file.ext:123` - Description
 
      ## Architecture Insights
-     [Patterns, conventions, and design decisions discovered]
+     [Patterns and design decisions discovered]
 
      ## Historical Context (from thoughts/)
-     [Relevant insights from thoughts/ directory with references]
-     - `thoughts/research/something.md` - Historical decision about X
-     - `thoughts/plans/build-thing.md` - Past exploration of Y
-
-     ## Related Research
-     [Links to other research documents in thoughts/shared/research/]
+     [Relevant insights from thoughts/ directory]
 
      ## Open Questions
-     [Any areas that need further investigation]
+     [Areas needing further investigation]
      ```
+
+   - After writing the local file, **attach it to the Linear issue**:
+     1. Encode: `base64 < thoughts/research/{issue_id}_{topic}.md` via Bash tool
+     2. Call `linear_create_attachment` with:
+        - `issue`: the Linear issue ID
+        - `base64Content`: the encoded string
+        - `filename`: `{issue_id}_{topic}.md`
+        - `contentType`: `"text/markdown"`
+        - `title`: `"Research: {issue_id} - {topic}"`
 
 7. **Present findings:**
    - Present a concise summary of findings to the user
@@ -131,14 +132,19 @@ Use the following metadata for the research document frontmatter:
    - Ask if they have follow-up questions or need clarification
 
 8. **Handle follow-up questions:**
-   - If the user has follow-up questions, append to the same research document
-   - Update the frontmatter fields `last_updated` and `last_updated_by` to reflect the update
-   - Add `last_updated_note: "Added follow-up research for [brief description]"` to frontmatter
-   - Add a new section: `## Follow-up Research [timestamp]`
-   - Spawn new sub-agents as needed for additional investigation
-    - Continue updating the document and syncing
+   - If the user has follow-up questions, conduct additional research and produce a new document
+   - Use a sequenced filename: `{issue_id}_{topic}_part2.md`, `_part3.md`, etc.
+   - Write the new local file to `thoughts/research/`
+   - Attach the new file to the same Linear issue as a new attachment (never overwrite existing attachments):
+     - `title`: `"Research: {issue_id} - {topic} (part N)"`
+   - Do NOT use any prior local research file as input — always fetch context from the Linear issue and its attachments
 
-9. **Update ticket status** to 'researched' by editing the ticket file's frontmatter.
+9. **Set status-ticket label to 'researched':**
+   Using the label preservation protocol:
+   1. Call `linear_get_issue` to get the current `labels[]` array
+   2. Remove any existing `status-ticket` group value
+   3. Append `"researched"` to the array
+   4. Call `linear_save_issue` with the full updated labels array
 
 Use the todowrite tool to create a structured task list for the 9 steps above, marking each as pending initially.
 
@@ -161,14 +167,8 @@ Use the todowrite tool to create a structured task list for the 9 steps above, m
   - ALWAYS wait for all sub-agents to complete before synthesizing (step 4)
   - ALWAYS gather metadata before writing the document (step 5 before step 6)
   - NEVER write the research document with placeholder values
-- **Frontmatter consistency**:
-  - Always include frontmatter at the beginning of research documents
-  - Keep frontmatter fields consistent across all research documents
-  - Update frontmatter when adding follow-up research
-  - Use snake_case for multi-word field names (e.g., `last_updated`, `git_commit`)
-  - Tags should be relevant to the research topic and components studied
+- **Document structure**: Research documents use a Metadata section in the body (no YAML frontmatter)
 
-**ticket**
+**issue_id**
 
 $ARGUMENTS
-

@@ -1,40 +1,43 @@
 ---
-description: Reviews the last commit made and determines if the plan was executed completely, and documents any drift that occurred during implementation. Provide a plan file in the arguments for the review to analyze. It is strongly advised to run this command within the session of a plan execution, after running commit.
+description: Review the execution of a Linear issue's plan. Provide a Linear issue ID as the argument. Best run after execution is complete.
 ---
 
 # Review Plan
 
 You are tasked with validating that an implementation plan was correctly executed, verifying all success criteria and identifying any deviations or issues.
 
-You will be given instructions, followed by a review that will contain user specific instructions and the plan file related to this implementation.
+You will be given a Linear issue ID. You will fetch the ticket, plan, and execution notes from Linear and validate that the implementation matches the plan.
 
 ## Validation Process
 
 ### Step 1: Context Discovery
 
-1. **Read the implementation plan** completely
+1. **Check status-ticket label and fetch all context from Linear:**
+   - Call `linear_get_issue` with the provided issue ID
+   - Inspect the `labels[]` array. If the `status-ticket` group value is NOT `implemented`, surface this to the user:
+     > "The status-ticket label is currently `{value}`, not `implemented`. Review is intended to run after execution. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the label is not `implemented`
+   - Read the issue `description` field — this is the ticket content
+   - Fetch all attachments:
+     - For each entry in `attachments[]`, call `linear_get_attachment` with the attachment `id`
+     - Decode each base64 result: `echo "$base64_content" | base64 --decode`
+   - Identify key attachments by their `title` prefix:
+     - Plan: `title` starts with `"Plan:"`
+     - Execution Notes: `title` starts with `"Execution Notes:"`
+     - Research: `title` starts with `"Research:"`
+   - Use the plan and execution notes as the primary review context. Research is supplementary.
+   - **IMPORTANT**: Do not read any local `thoughts/` files as inputs.
+
 2. **Identify what should have changed**:
-   - List all files that should be modified
+   - List all files that should be modified according to the plan
    - Note all success criteria (automated and manual)
    - Identify key functionality to verify
 
-3. **Spawn parallel research tasks** to discover implementation:
-   ```
-   Task 1 - Verify database changes:
-   Research if migration [N] was added and schema changes match plan.
-   Check: migration files, schema version, table structure
-   Return: What was implemented vs what plan specified
-
-   Task 2 - Verify code changes:
-   Find all modified files related to [feature].
-   Compare actual changes to plan specifications.
-   Return: File-by-file comparison of planned vs actual
-
-   Task 3 - Verify test coverage:
-   Check if tests were added/modified as specified.
-   Run test commands and capture results.
-   Return: Test status and any missing coverage
-   ```
+3. **Identify actual changes by examining the codebase:**
+   - Use the **codebase-locator** task to find all files related to the components that were supposed to change
+   - Use the **codebase-analyzer** task to understand what the implementation actually does
+   - Compare actual implementation to plan specifications
+   - Return file-by-file comparison of planned vs actual
 
 ### Step 2: Systematic Validation
 
@@ -60,11 +63,22 @@ For each phase in the plan:
 
 ### Step 3: Generate Validation Report
 
-Create comprehensive validation summary and write it to the `thoughts/reviews` directory with a filename that matches the plan being reviewed (e.g., if reviewing `plan-feature-x.md`, save as `thoughts/reviews/feature-x-review.md`).
+Create comprehensive validation summary and:
 
-### Step 4: Update ticket status to 'reviewed' by editing the ticket file's frontmatter.
+1. **Write the local file** to `thoughts/reviews/{issue_id}_{plan_name}_review.md`
+   (e.g. `thoughts/reviews/PAP-7003_amend_agentic_commands_review.md`)
+   This is a convenience copy only — it must not be used as input by any command.
 
-Use the todowrite tool to create a structured task list for the 4 steps above, marking each as pending initially.
+2. **Attach the review to the Linear issue**:
+   1. Encode: `base64 < thoughts/reviews/{issue_id}_{plan_name}_review.md` via Bash tool
+   2. Call `linear_create_attachment` with:
+      - `issue`: the Linear issue ID
+      - `base64Content`: the encoded string
+      - `filename`: `{issue_id}_{plan_name}_review.md`
+      - `contentType`: `"text/markdown"`
+      - `title`: `"Review: {issue_id} - {plan_name}"`
+
+Use this report structure:
 
 ```markdown
 ## Validation Report: [Plan Name]
@@ -87,7 +101,7 @@ Use the todowrite tool to create a structured task list for the 4 steps above, m
 - Error handling follows plan
 
 #### Deviations from Plan:
-- Check the plan's "## Deviations from Plan" section (if present)
+- Check the plan's "## Deviations" section (if present)
 - For each deviation noted:
   - **Phase [N]**: [Original plan vs actual implementation]
   - **Assessment**: [Is the deviation justified? Impact on success criteria?]
@@ -114,6 +128,16 @@ Use the todowrite tool to create a structured task list for the 4 steps above, m
 - Consider adding integration test for [scenario]
 - Document new API endpoints
 ```
+
+### Step 4: Set status-ticket label to 'reviewed'
+
+Using the label preservation protocol:
+1. Call `linear_get_issue` to get the current `labels[]` array
+2. Remove any existing `status-ticket` group value
+3. Append `"reviewed"` to the array
+4. Call `linear_save_issue` with the full updated labels array
+
+Use the todowrite tool to create a structured task list for the 4 steps above, marking each as pending initially.
 
 ## Working with Existing Context
 
@@ -146,7 +170,6 @@ The validation works best after commits are made, as it can analyze the git hist
 
 Remember: Good validation catches issues before they reach production. Be constructive but thorough in identifying gaps or improvements.
 
-**review**
+**issue_id**
 
 $ARGUMENTS
-
