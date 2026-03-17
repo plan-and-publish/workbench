@@ -1,5 +1,5 @@
 ---
-description: Create an implementation plan from a ticket and research. Provide both the ticket and relevant research as arguments to this command. It is best to run this command in a new session.
+description: Create an implementation plan from a Linear issue. Provide a Linear issue ID as the argument. Best run in a new session.
 ---
 
 # Implementation Plan
@@ -10,18 +10,24 @@ You are tasked with creating detailed implementation plans through an interactiv
 
 ### Step 1: Context Gathering & Initial Analysis
 
-1. **Read all mentioned files immediately and FULLY**:
-   - Ticket files (e.g., `thoughts/tickets/eng_1234.md`)
-   - Research documents
-   - Related implementation plans
-   - Any JSON/data files mentioned
-   - **IMPORTANT**: Use the Read tool WITHOUT limit/offset parameters to read entire files
-   - **CRITICAL**: DO NOT spawn sub-tasks before reading these files yourself in the main context
+1. **Check status-ticket label and fetch all context from Linear:**
+   - Call `linear_get_issue` with the provided issue ID
+   - Inspect the `labels[]` array. If the `status-ticket` group value is NOT `researched`, surface this to the user:
+     > "The status-ticket label is currently `{value}`, not `researched`. Planning is intended to run after research. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the label is not `researched`
+   - Read the issue `description` field — this is the ticket content
+   - Fetch all attachments on the issue:
+     - The `attachments[]` array from `linear_get_issue` contains metadata only (id, title, subtitle, url)
+     - For each attachment, call `linear_get_attachment` with the attachment `id`
+     - Decode each attachment's base64 content using the Bash tool:
+       `echo "$base64_content" | base64 --decode`
+     - Treat all attachments as context (research documents, prior artefacts)
+   - **IMPORTANT**: Do not read any local `thoughts/` files as inputs. Linear is the sole source of truth.
 
-2. **Spawn initial research tasks to gather context**:
+2. **Spawn initial research tasks to gather context:**
    Before asking the user any questions, use specialized agents to research in parallel:
 
-   - Use the **codebase-locator** task to find all files related to the files given by the user
+   - Use the **codebase-locator** task to find all files related to the components mentioned in the ticket
    - Use the **codebase-analyzer** task to understand how the current implementation works
    - If relevant, use the **thoughts-locator** task to find any existing thoughts documents about this feature
 
@@ -31,18 +37,18 @@ You are tasked with creating detailed implementation plans through an interactiv
    - Trace data flow and key functions
    - Return detailed explanations with file:line references
 
-3. **Read all files identified by research tasks**:
+3. **Read all files identified by research tasks:**
    - After research tasks complete, read ALL files they identified as relevant
    - Read them FULLY into the main context
    - This ensures you have complete understanding before proceeding
 
-4. **Analyze and verify understanding**:
+4. **Analyze and verify understanding:**
    - Cross-reference the ticket requirements with actual code
    - Identify any discrepancies or misunderstandings
    - Note assumptions that need verification
    - Determine true scope based on codebase reality
 
-5. **Present informed understanding and focused questions**:
+5. **Present informed understanding and focused questions:**
    ```
    Based on the ticket and my research of the codebase, I understand we need to [accurate summary].
 
@@ -91,9 +97,9 @@ After getting initial clarifications:
    - Return specific file:line references
    - Find tests and examples
 
-3. **Wait for ALL sub-tasks to complete** before proceeding
+4. **Wait for ALL sub-tasks to complete** before proceeding
 
-4. **Present findings and design options**:
+5. **Present findings and design options**:
    ```
    Based on my research, here's what I found:
 
@@ -137,7 +143,20 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `thoughts/plans/{descriptive_name}.md`
+1. **Write the plan** to `thoughts/plans/{issue_id}_{descriptive_name}.md`
+   (e.g. `thoughts/plans/PAP-7003_amend_agentic_commands.md`)
+
+   After writing the local file, **attach it to the Linear issue**:
+   1. Encode: `base64 < thoughts/plans/{issue_id}_{descriptive_name}.md` via Bash tool
+   2. Call `linear_create_attachment` with:
+      - `issue`: the Linear issue ID
+      - `base64Content`: the encoded string
+      - `filename`: `{issue_id}_{descriptive_name}.md`
+      - `contentType`: `"text/markdown"`
+      - `title`: `"Plan: {issue_id} - {descriptive_name}"`
+
+   This file is a convenience copy only — downstream commands must not read it as input.
+
 2. **Use this template structure**:
 
 ```markdown
@@ -228,9 +247,8 @@ After structure approval:
 
 ## References
 
-- Original ticket: `thoughts/tickets/eng_XXXX.md`
-- Related research: `thoughts/research/[relevant].md`
-- Similar implementation: `[file:line]`
+- Linear issue: `{issue_id}` — https://linear.app/.../{issue_id}
+- Research attachment: see issue attachments titled `"Research: {issue_id} - ..."`
 ```
 
 ### Step 5: Review
@@ -238,7 +256,7 @@ After structure approval:
 2. **Present the draft plan location**:
     ```
     I've created the initial implementation plan at:
-    `thoughts/plans/[filename].md`
+    `thoughts/plans/{issue_id}_{name}.md`
 
     Please review it and let me know:
     - Are the phases properly scoped?
@@ -255,7 +273,13 @@ After structure approval:
 
 4. **Continue refining** until the user is satisfied
 
-### Step 6: Update ticket status to 'planned' by editing the ticket file's frontmatter.
+### Step 6: Set status-ticket label to 'planned'
+
+Using the label preservation protocol:
+1. Call `linear_get_issue` to get the current `labels[]` array
+2. Remove any existing `status-ticket` group value
+3. Append `"planned"` to the array
+4. Call `linear_save_issue` with the full updated labels array
 
 Use the todowrite tool to create a structured task list for the 6 steps above, marking each as pending initially.
 
@@ -373,6 +397,6 @@ When spawning research sub-tasks:
    - Don't accept results that seem incorrect
 
 
-**files**
+**issue_id**
 
 $ARGUMENTS
