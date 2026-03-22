@@ -1,7 +1,6 @@
 ---
 description: The research equivalent of codebase-analyzer. Use this subagent_type when wanting to deep dive on a research topic. Not commonly needed otherwise.
 mode: subagent
-model: anthropic/claude-opus-4-1-20250805
 temperature: 0.1
 tools:
   read: true
