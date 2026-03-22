@@ -65,3 +65,13 @@
 # Add your custom patterns below this line
 package.json
 package-lock.json
+
+# Root level items to ignore
+/\..*
+
+# Specific folders
+/scripts/
+/thoughts/
+
+# Root markdown
+/README.md
