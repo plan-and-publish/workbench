@@ -3,3 +3,4 @@
 package-lock.json
 .ck/*
 thoughts/
+node_modules

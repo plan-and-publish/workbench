@@ -117,14 +117,11 @@ Use the following metadata for the research document body:
      [Areas needing further investigation]
      ```
 
-   - After writing the local file, **attach it to the Linear issue**:
-     1. Encode: `base64 < thoughts/research/{issue_id}_{topic}.md` via Bash tool
-     2. Call `linear_create_attachment` with:
-        - `issue`: the Linear issue ID
-        - `base64Content`: the encoded string
-        - `filename`: `{issue_id}_{topic}.md`
-        - `contentType`: `"text/markdown"`
-        - `title`: `"Research: {issue_id} - {topic}"`
+   - After writing the local file, **create a Linear document for the issue**:
+      - Call `linear_create_document` with:
+         - `issue`: the Linear issue ID
+         - `title`: `"Research: {issue_id} - {topic}"`
+         - `content`: the full markdown content of the research document
 
 7. **Present findings:**
    - Present a concise summary of findings to the user
@@ -135,9 +132,9 @@ Use the following metadata for the research document body:
    - If the user has follow-up questions, conduct additional research and produce a new document
    - Use a sequenced filename: `{issue_id}_{topic}_part2.md`, `_part3.md`, etc.
    - Write the new local file to `thoughts/research/`
-   - Attach the new file to the same Linear issue as a new attachment (never overwrite existing attachments):
-     - `title`: `"Research: {issue_id} - {topic} (part N)"`
-   - Do NOT use any prior local research file as input — always fetch context from the Linear issue and its attachments
+   - Create a new Linear document for the issue (never update existing documents):
+      - Call `linear_create_document` with `issue`, `title`: `"Research: {issue_id} - {topic} (part N)"`, and `content`
+   - Do NOT use any prior local research file as input — always fetch context from the Linear issue and its documents
 
 9. **Set status-ticket label to 'researched':**
    Using the label preservation protocol:

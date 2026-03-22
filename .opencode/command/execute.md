@@ -76,17 +76,17 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
      > "The status-ticket label is currently `{value}`, not `planned`. Execution is intended to run after planning. Do you want to proceed anyway?"
    - Wait for explicit confirmation before continuing if the label is not `planned`
    - Read the issue `description` field — this is the ticket content
-   - Fetch all attachments:
-     - For each entry in `attachments[]`, call `linear_get_attachment` with the attachment `id`
-     - Decode each base64 result: `echo "$base64_content" | base64 --decode`
-   - **Identify the plan attachment** by finding the attachment whose `title` starts with `"Plan:"`.
-     - If NO such attachment exists, **stop immediately** and inform the user:
-       > "No plan attachment was found on issue {issue_id}. Cannot proceed with execution. Please run /plan first."
-     - Do not proceed until a plan attachment is confirmed present.
-   - Treat all other attachments (research, prior artefacts) as additional context.
+   - Fetch all documents linked to the issue:
+      - Call `linear_list_documents` with the issue ID to list documents associated with it
+      - For each document, call `linear_get_document` with the document `id` to retrieve its content
+   - **Identify the plan document** by finding the document whose `title` starts with `"Plan:"`.
+      - If NO such document exists, **stop immediately** and inform the user:
+        > "No plan document was found on issue {issue_id}. Cannot proceed with execution. Please run /plan first."
+      - Do not proceed until a plan document is confirmed present.
+   - Treat all other documents (research, prior artefacts) as additional context.
    - **IMPORTANT**: Do not read any local `thoughts/` files as inputs.
 
-2. **Read the plan completely** from the decoded plan attachment content. Check for any execution notes attachment from a prior partial run (title starts with `"Execution Notes:"`). If one exists, read it to understand what was already completed — trust completed phases and pick up from the first incomplete item.
+2. **Read the plan completely** from the plan document content. Check for any execution notes document from a prior partial run (title starts with `"Execution Notes:"`). If one exists, read it to understand what was already completed — trust completed phases and pick up from the first incomplete item.
 
 3. **Consider the steps involved in the plan.** Think deeply about how the pieces fit together and derive a detailed todo list from the plan's phases and requirements.
 
@@ -100,14 +100,11 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
    - Discoveries made during implementation
    - Decisions taken that differ from the plan
 
-   At the end of execution, attach the execution notes to the Linear issue:
-   1. Encode: `base64 < thoughts/executions/{issue_id}_execution_notes.md` via Bash tool
-   2. Call `linear_create_attachment` with:
+   At the end of execution, create a Linear document for the execution notes:
+   - Call `linear_create_document` with:
       - `issue`: the Linear issue ID
-      - `base64Content`: the encoded string
-      - `filename`: `{issue_id}_execution_notes.md`
-      - `contentType`: `"text/markdown"`
       - `title`: `"Execution Notes: {issue_id}"`
+      - `content`: the full markdown content of the execution notes file
 
 7. **Handle any mismatches or issues** by presenting them clearly and asking for guidance if needed.
 

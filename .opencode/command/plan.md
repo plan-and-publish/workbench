@@ -16,12 +16,10 @@ You are tasked with creating detailed implementation plans through an interactiv
      > "The status-ticket label is currently `{value}`, not `researched`. Planning is intended to run after research. Do you want to proceed anyway?"
    - Wait for explicit confirmation before continuing if the label is not `researched`
    - Read the issue `description` field — this is the ticket content
-   - Fetch all attachments on the issue:
-     - The `attachments[]` array from `linear_get_issue` contains metadata only (id, title, subtitle, url)
-     - For each attachment, call `linear_get_attachment` with the attachment `id`
-     - Decode each attachment's base64 content using the Bash tool:
-       `echo "$base64_content" | base64 --decode`
-     - Treat all attachments as context (research documents, prior artefacts)
+   - Fetch all documents linked to the issue:
+      - Call `linear_list_documents` with the issue ID to list documents associated with it
+      - For each document, call `linear_get_document` with the document `id` to retrieve its content
+      - Treat all documents as context (research documents, prior artefacts)
    - **IMPORTANT**: Do not read any local `thoughts/` files as inputs. Linear is the sole source of truth.
 
 2. **Spawn initial research tasks to gather context:**
@@ -146,14 +144,11 @@ After structure approval:
 1. **Write the plan** to `thoughts/plans/{issue_id}_{descriptive_name}.md`
    (e.g. `thoughts/plans/PAP-7003_amend_agentic_commands.md`)
 
-   After writing the local file, **attach it to the Linear issue**:
-   1. Encode: `base64 < thoughts/plans/{issue_id}_{descriptive_name}.md` via Bash tool
-   2. Call `linear_create_attachment` with:
+   After writing the local file, **create a Linear document for the issue**:
+   - Call `linear_create_document` with:
       - `issue`: the Linear issue ID
-      - `base64Content`: the encoded string
-      - `filename`: `{issue_id}_{descriptive_name}.md`
-      - `contentType`: `"text/markdown"`
       - `title`: `"Plan: {issue_id} - {descriptive_name}"`
+      - `content`: the full markdown content of the plan
 
    This file is a convenience copy only — downstream commands must not read it as input.
 
@@ -248,7 +243,7 @@ After structure approval:
 ## References
 
 - Linear issue: `{issue_id}` — https://linear.app/.../{issue_id}
-- Research attachment: see issue attachments titled `"Research: {issue_id} - ..."`
+- Research document: see issue documents titled `"Research: {issue_id} - ..."`
 ```
 
 ### Step 5: Review
