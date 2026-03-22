@@ -1,6 +1,6 @@
 # workbench
 
-- This repository will be used as a generic workbench for development and maintaining of Plan & Publish project code and documentation.
+- This repository will be used as a generic workbench for development and maintaining of different projects code and documentation.
 
 ## Folder Structure
 
