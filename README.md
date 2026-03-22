@@ -19,3 +19,38 @@ To authenticate the Linear MCP (defined in [.opencode/opencode.json](.opencode/o
 ```bash
 opencode mcp auth linear
 ```
+
+## workbench CLI
+
+The `workbench` CLI provides a terminal UI for initialising the workbench repository.
+
+### Prerequisites
+
+- [Bun](https://bun.sh) installed
+- [gh CLI](https://cli.github.com) installed and authenticated (`gh auth login`)
+
+### Install
+
+```bash
+cd packages/workbench-cli
+bun install
+bun link
+```
+
+### Run (without installing)
+
+```bash
+bun run packages/workbench-cli/src/index.ts
+```
+
+### Usage
+
+Run `workbench` from the workbench repository root. Select `init` to walk through:
+
+1. Select GitHub org or personal account
+2. Select code repositories (submodules under `projects/`)
+3. Select resource repositories (submodules under `resources/`)
+4. Configure branch per repository
+5. Optionally index with `ck`
+
+After init, `.workbench/config.yaml` is written with the selected configuration.

@@ -1,0 +1,16 @@
+{
+  "name": "workbench-cli",
+  "version": "1.0.0",
+  "bin": {
+    "workbench": "./src/index.ts"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.90",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.0.0"
+  }
+}
