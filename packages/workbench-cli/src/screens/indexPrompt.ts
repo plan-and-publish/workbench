@@ -59,7 +59,8 @@ export function showIndexPrompt(
     }
   )
 
-  select.focus()
   container.add(select)
   renderer.root.add(container)
+  // focus() called after select is in the render tree — required by opentui
+  select.focus()
 }

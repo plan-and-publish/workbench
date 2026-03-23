@@ -88,6 +88,15 @@ export function showBranchConfig(
     scrollBox.add(row)
   })
 
+  container.add(scrollBox)
+  renderer.root.add(container)
+
+  // Early exit: no repos selected — skip branch config entirely
+  if (inputs.length === 0) {
+    onConfirm(new Map())
+    return
+  }
+
   let focusIndex = 0
 
   const keypressHandler = (key: KeyEvent) => {
@@ -110,11 +119,6 @@ export function showBranchConfig(
 
   renderer.keyInput.on("keypress", keypressHandler)
 
-  // Focus first input
-  if (inputs.length > 0) {
-    inputs[0].focus()
-  }
-
-  container.add(scrollBox)
-  renderer.root.add(container)
+  // focus() called after renderer.root.add(container) — required by opentui
+  inputs[0].focus()
 }

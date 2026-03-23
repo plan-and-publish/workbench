@@ -6,15 +6,17 @@ import {
   TextRenderable,
   BoxRenderable,
   type CliRenderer,
+  type KeyEvent,
 } from "@opentui/core"
 import { getOrgs, type GhOrg } from "../utils/gh.ts"
+import { createSpinner } from "../utils/spinner.ts"
 
 const SCREEN_ID = "org-select-screen"
 
-export function showOrgSelect(
+export async function showOrgSelect(
   renderer: CliRenderer,
   onSelect: (orgLogin: string) => void
-): void {
+): Promise<void> {
   // Remove any existing screen
   const existing = renderer.root.getRenderable(SCREEN_ID)
   if (existing) {
@@ -26,26 +28,26 @@ export function showOrgSelect(
     flexDirection: "column",
     padding: 1,
   })
-
-  const loadingText = new TextRenderable(renderer, {
-    id: "org-loading",
-    content: "Fetching organizations...",
-    fg: "#888888",
-  })
-  container.add(loadingText)
   renderer.root.add(container)
 
-  // Fetch orgs (blocking, behind loading text)
+  // Spinner replaces loadingText — added AFTER container so it renders below
+  const spinner = createSpinner(renderer, "Loading organizations...")
+  spinner.start()
+
   let orgs: GhOrg[]
   try {
-    orgs = getOrgs()
+    orgs = await getOrgs()
   } catch (err) {
-    loadingText.content = `Error fetching orgs: ${err}`
+    spinner.stop()
+    const errText = new TextRenderable(renderer, {
+      id: "org-error",
+      content: `Error fetching orgs: ${err}`,
+      fg: "#FF4444",
+    })
+    container.add(errText)
     return
   }
-
-  // Remove loading text
-  container.remove("org-loading")
+  spinner.stop()
 
   // Title
   const title = new TextRenderable(renderer, {
@@ -93,9 +95,26 @@ export function showOrgSelect(
     selectList.options = filtered.length > 0 ? filtered : allOptions
   })
 
+  let listFocused = false
+
+  const keypressHandler = (key: KeyEvent) => {
+    if (key.name === "tab") {
+      if (!listFocused) {
+        filterInput.blur()
+        selectList.focus()
+        listFocused = true
+      } else {
+        selectList.blur()
+        filterInput.focus()
+        listFocused = false
+      }
+    }
+  }
+
   selectList.on(
     SelectRenderableEvents.ITEM_SELECTED,
     (_index: number, option: { value: string }) => {
+      renderer.keyInput.off("keypress", keypressHandler)
       container.visible = false
       onSelect(option.value)
     }
@@ -104,5 +123,8 @@ export function showOrgSelect(
   container.add(filterInput)
   container.add(selectList)
 
+  renderer.keyInput.on("keypress", keypressHandler)
+
+  // focus() called last — after container is in the tree and all children added
   filterInput.focus()
 }

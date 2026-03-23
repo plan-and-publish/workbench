@@ -1,6 +1,9 @@
-import { execSync } from "child_process"
+import { execSync, execFile } from "child_process"
+import { promisify } from "util"
 import { existsSync } from "fs"
 import { join } from "path"
+
+const execFileAsync = promisify(execFile)
 
 export interface GhOrg {
   login: string
@@ -32,25 +35,28 @@ export function checkRepoRoot(): void {
   }
 }
 
-export function getOrgs(): GhOrg[] {
-  const userLogin = execSync("gh api /user --jq .login", { stdio: "pipe" })
-    .toString()
-    .trim()
-  const orgsRaw = execSync("gh api /user/orgs", { stdio: "pipe" }).toString()
-  const orgs: Array<{ login: string; description: string }> = JSON.parse(orgsRaw)
+export async function getOrgs(): Promise<GhOrg[]> {
+  // Run both gh calls concurrently — cuts latency roughly in half
+  const [userResult, orgsResult] = await Promise.all([
+    execFileAsync("gh", ["api", "/user", "--jq", ".login"], { encoding: "utf8" }),
+    execFileAsync("gh", ["api", "/user/orgs"], { encoding: "utf8" }),
+  ])
+  const userLogin = userResult.stdout.trim()
+  const orgs: Array<{ login: string; description: string }> = JSON.parse(orgsResult.stdout)
   return [
     { login: userLogin, description: "Personal account" },
     ...orgs.map((o) => ({ login: o.login, description: o.description ?? "" })),
   ]
 }
 
-export function getRepos(orgLogin: string): GhRepo[] {
-  const raw = execSync(
-    `gh repo list ${orgLogin} --json name,url,defaultBranchRef --limit 200`,
-    { stdio: "pipe" }
-  ).toString()
+export async function getRepos(orgLogin: string): Promise<GhRepo[]> {
+  const { stdout } = await execFileAsync(
+    "gh",
+    ["repo", "list", orgLogin, "--json", "name,url,defaultBranchRef", "--limit", "200"],
+    { encoding: "utf8" }
+  )
   const repos: Array<{ name: string; url: string; defaultBranchRef: { name: string } | null }> =
-    JSON.parse(raw)
+    JSON.parse(stdout)
   return repos.map((r) => ({
     name: r.name,
     url: r.url,

@@ -9,6 +9,7 @@ import {
   type KeyEvent,
 } from "@opentui/core"
 import { getRepos, type GhRepo } from "../utils/gh.ts"
+import { createSpinner } from "../utils/spinner.ts"
 
 const SCREEN_ID = "repo-select-screen"
 
@@ -18,12 +19,12 @@ export interface Repo {
   defaultBranch: string
 }
 
-export function showRepoSelect(
+export async function showRepoSelect(
   renderer: CliRenderer,
   orgLogin: string,
   stepTitle: string,
   onConfirm: (repos: Repo[]) => void
-): void {
+): Promise<void> {
   // Remove any existing screen
   const existing = renderer.root.getRenderable(SCREEN_ID)
   if (existing) {
@@ -35,25 +36,27 @@ export function showRepoSelect(
     flexDirection: "column",
     padding: 1,
   })
-
-  const loadingText = new TextRenderable(renderer, {
-    id: "repo-loading",
-    content: `Fetching repositories for ${orgLogin}...`,
-    fg: "#888888",
-  })
-  container.add(loadingText)
   renderer.root.add(container)
+
+  // Spinner replaces loadingText — added AFTER container so it renders below
+  const spinner = createSpinner(renderer, `Loading repositories...`)
+  spinner.start()
 
   // Fetch repos
   let repos: GhRepo[]
   try {
-    repos = getRepos(orgLogin)
+    repos = await getRepos(orgLogin)
   } catch (err) {
-    loadingText.content = `Error fetching repos: ${err}`
+    spinner.stop()
+    const errText = new TextRenderable(renderer, {
+      id: "repo-error",
+      content: `Error fetching repos: ${err}`,
+      fg: "#FF4444",
+    })
+    container.add(errText)
     return
   }
-
-  container.remove("repo-loading")
+  spinner.stop()
 
   // Title
   const title = new TextRenderable(renderer, {

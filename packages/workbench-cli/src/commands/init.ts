@@ -5,6 +5,7 @@ import { showBranchConfig } from "../screens/branchConfig.ts"
 import { showIndexPrompt } from "../screens/indexPrompt.ts"
 import { showExecutingScreen } from "../screens/executing.ts"
 import { runCommand } from "../utils/spawn.ts"
+import { createSpinner } from "../utils/spinner.ts"
 import { writeConfig } from "../utils/config.ts"
 import { mkdirSync } from "fs"
 
@@ -23,15 +24,15 @@ export function runInitFlow(
   const state: Partial<InitState> = {}
 
   // Step 1: Org selection
-  showOrgSelect(renderer, (orgLogin) => {
+  void showOrgSelect(renderer, (orgLogin) => {
     state.selectedOrg = orgLogin
 
     // Step 2: Code repo selection
-    showRepoSelect(renderer, orgLogin, "Select Code Repositories (projects/)", (codeRepos) => {
+    void showRepoSelect(renderer, orgLogin, "Select Code Repositories (projects/)", (codeRepos) => {
       state.codeRepos = codeRepos
 
       // Step 3: Resource repo selection
-      showRepoSelect(
+      void showRepoSelect(
         renderer,
         orgLogin,
         "Select Resource Repositories (resources/)",
@@ -62,10 +63,10 @@ async function runInit(
   state: InitState,
   onComplete: (initialized: boolean) => void
 ): Promise<void> {
-  const { appendLine, container: execContainer } = showExecutingScreen(renderer)
+  const { appendLine, startThrottle, stopThrottle, container: execContainer } = showExecutingScreen(renderer)
 
-  function onLine(line: string, _isStderr: boolean): void {
-    appendLine(line)
+  function onLine(line: string, _isStderr: boolean, isCarriageReturn: boolean): void {
+    appendLine(line, false, isCarriageReturn)
   }
 
   try {
@@ -80,15 +81,23 @@ async function runInit(
       const destPath = `projects/${repo.name}`
 
       appendLine(`--- Adding ${destPath} ---`, true)
-      await runCommand("git", ["submodule", "add", repo.url, destPath], onLine)
+      startThrottle()
+      try {
+        await runCommand("git", ["submodule", "add", repo.url, destPath], onLine)
+      } finally {
+        stopThrottle()
+      }
 
       // Checkout/create branch
       appendLine(`--- Checking out branch ${branch} for ${repo.name} ---`, true)
+      startThrottle()
       try {
         await runCommand("git", ["-C", destPath, "checkout", branch], onLine)
       } catch {
         // Branch doesn't exist remotely — create it locally
         await runCommand("git", ["-C", destPath, "checkout", "-b", branch], onLine)
+      } finally {
+        stopThrottle()
       }
     }
 
@@ -98,14 +107,23 @@ async function runInit(
       const destPath = `resources/${repo.name}`
 
       appendLine(`--- Adding ${destPath} ---`, true)
-      await runCommand("git", ["submodule", "add", repo.url, destPath], onLine)
+      startThrottle()
+      try {
+        await runCommand("git", ["submodule", "add", repo.url, destPath], onLine)
+      } finally {
+        stopThrottle()
+      }
 
       // Checkout/create branch
       appendLine(`--- Checking out branch ${branch} for ${repo.name} ---`, true)
+      startThrottle()
       try {
         await runCommand("git", ["-C", destPath, "checkout", branch], onLine)
       } catch {
+        // Branch doesn't exist remotely — create it locally
         await runCommand("git", ["-C", destPath, "checkout", "-b", branch], onLine)
+      } finally {
+        stopThrottle()
       }
     }
 
@@ -117,11 +135,25 @@ async function runInit(
     // Step 5: Optional indexing (non-fatal)
     if (state.shouldIndex) {
       appendLine("--- Running ck --index ---", true)
+      const indexSpinner = createSpinner(renderer, "Indexing...")
+      indexSpinner.start()
+      let indexingStarted = false
+
+      startThrottle()
       try {
-        await runCommand("ck", ["--index"], onLine)
+        await runCommand("ck", ["--index"], (line, isStderr, isCR) => {
+          if (!indexingStarted) {
+            indexSpinner.stop()
+            indexingStarted = true
+          }
+          appendLine(line, false, isCR)
+        })
         appendLine("Indexing complete.")
       } catch (err) {
+        indexSpinner.stop()
         appendLine(`Warning: ck --index failed: ${err}. Continuing...`)
+      } finally {
+        stopThrottle()
       }
     }
 
