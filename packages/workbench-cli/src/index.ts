@@ -1,5 +1,7 @@
 import { createCliRenderer, TextRenderable, type CliRenderer } from "@opentui/core"
-import { existsSync } from "fs"
+import { existsSync, readFileSync } from "node:fs"
+import { fileURLToPath } from "node:url"
+import { dirname, join } from "node:path"
 import { checkAuth, checkRepoRoot } from "./utils/gh.ts"
 import { showMainMenu } from "./screens/mainMenu.ts"
 import { runInitFlow } from "./commands/init.ts"
@@ -14,6 +16,23 @@ const renderer: CliRenderer = await createCliRenderer({
   exitSignals: ["SIGTERM", "SIGQUIT", "SIGABRT", "SIGHUP"],
   targetFps: 30,
 })
+
+// --- Version badge ---
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const { version } = JSON.parse(
+  readFileSync(join(__dirname, "..", "package.json"), "utf-8")
+)
+
+const versionBadge = new TextRenderable(renderer, {
+  id: "version-badge",
+  content: `v${version}`,
+  fg: "#888888",
+  position: "absolute",
+  right: 1,
+  bottom: 0,
+  zIndex: 1000,
+})
+renderer.root.add(versionBadge)
 
 // --- Global double-Ctrl+C handler ---
 let ctrlCTimer: ReturnType<typeof setTimeout> | null = null

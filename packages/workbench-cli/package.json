@@ -1,6 +1,6 @@
 {
   "name": "workbench-cli",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "bin": {
     "workbench": "./src/index.ts"
   },
