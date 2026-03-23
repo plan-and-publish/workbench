@@ -93,7 +93,16 @@ export function showExecutingScreen(renderer: CliRenderer): ExecutingScreen {
 
   // Public API: buffer a line. Consecutive \r lines are coalesced — only the
   // last value is kept since earlier values would be immediately overwritten.
+  // Header lines and lines outside an active throttle are rendered immediately.
   function appendLine(line: string, isHeader = false, isCarriageReturn = false): void {
+    // Render immediately when no throttle is active (e.g. status lines between
+    // runCommand calls) or when this is a header/separator line — these are
+    // infrequent and should appear instantly, not be held for up to 1 second.
+    if (flushInterval === null || isHeader) {
+      flushBuffer() // flush any pending buffered output first (maintain order)
+      renderLine(line, isHeader, isCarriageReturn)
+      return
+    }
     if (
       isCarriageReturn &&
       lineBuffer.length > 0 &&

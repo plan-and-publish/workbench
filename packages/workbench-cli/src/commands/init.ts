@@ -144,22 +144,17 @@ async function runInit(
       appendLine("--- Running ck --index ---", true)
       const indexSpinner = createSpinner(renderer, "Indexing...")
       indexSpinner.start()
-      let indexingStarted = false
 
       startThrottle()
       try {
         await runCommand("ck", ["--index"], (line, isStderr, isCR) => {
-          if (!indexingStarted) {
-            indexSpinner.stop()
-            indexingStarted = true
-          }
           appendLine(line, false, isCR)
         })
         appendLine("Indexing complete.")
       } catch (err) {
-        indexSpinner.stop()
         appendLine(`Warning: ck --index failed: ${err}. Continuing...`)
       } finally {
+        indexSpinner.stop()
         stopThrottle()
       }
     }
