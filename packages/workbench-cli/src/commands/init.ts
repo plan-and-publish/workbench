@@ -9,7 +9,7 @@ import { createSpinner } from "../utils/spinner.ts"
 import { writeConfig } from "../utils/config.ts"
 import { mkdirSync } from "fs"
 
-interface InitState {
+export interface InitState {
   selectedOrg: string
   codeRepos: Repo[]
   resourceRepos: Repo[]
@@ -65,7 +65,7 @@ export function runInitFlow(
   })
 }
 
-async function runInit(
+export async function runInit(
   renderer: CliRenderer,
   state: InitState,
   onComplete: (initialized: boolean) => void
