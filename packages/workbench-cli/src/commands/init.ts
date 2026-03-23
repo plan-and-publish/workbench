@@ -9,12 +9,131 @@ import { createSpinner } from "../utils/spinner.ts"
 import { writeConfig } from "../utils/config.ts"
 import { mkdirSync } from "fs"
 
-interface InitState {
+export interface InitState {
   selectedOrg: string
   codeRepos: Repo[]
   resourceRepos: Repo[]
   branches: Map<string, string>
   shouldIndex: boolean
+}
+
+export interface InitProgress {
+  onLine: (line: string, isHeader: boolean, isCarriageReturn: boolean) => void
+  startThrottle: () => void
+  stopThrottle: () => void
+}
+
+export interface InitResult {
+  success: boolean
+  error?: Error
+}
+
+export async function executeInit(
+  state: InitState,
+  progress: InitProgress,
+  renderer?: CliRenderer
+): Promise<InitResult> {
+  const { onLine, startThrottle, stopThrottle } = progress
+
+  try {
+    onLine("--- Creating .workbench/ directory ---", true, false)
+    mkdirSync(".workbench", { recursive: true })
+    onLine("Created .workbench/", false, false)
+
+    for (const repo of state.codeRepos) {
+      const branch = state.branches.get(repo.name) ?? repo.defaultBranch
+      const destPath = `projects/${repo.name}`
+
+      onLine(`--- Adding ${destPath} ---`, true, false)
+      startThrottle()
+      try {
+        await runCommand("git", ["submodule", "add", repo.url, destPath], (line, _, isCR) =>
+          onLine(line, false, isCR)
+        )
+      } finally {
+        stopThrottle()
+      }
+
+      onLine(`--- Checking out branch ${branch} for ${repo.name} ---`, true, false)
+      startThrottle()
+      try {
+        await runCommand("git", ["-C", destPath, "checkout", branch], (line, _, isCR) =>
+          onLine(line, false, isCR)
+        )
+      } catch {
+        await runCommand("git", ["-C", destPath, "checkout", "-b", branch], (line, _, isCR) =>
+          onLine(line, false, isCR)
+        )
+      } finally {
+        stopThrottle()
+      }
+    }
+
+    for (const repo of state.resourceRepos) {
+      const branch = state.branches.get(repo.name) ?? repo.defaultBranch
+      const destPath = `resources/${repo.name}`
+
+      onLine(`--- Adding ${destPath} ---`, true, false)
+      startThrottle()
+      try {
+        await runCommand("git", ["submodule", "add", repo.url, destPath], (line, _, isCR) =>
+          onLine(line, false, isCR)
+        )
+      } finally {
+        stopThrottle()
+      }
+
+      onLine(`--- Checking out branch ${branch} for ${repo.name} ---`, true, false)
+      startThrottle()
+      try {
+        await runCommand("git", ["-C", destPath, "checkout", branch], (line, _, isCR) =>
+          onLine(line, false, isCR)
+        )
+      } catch {
+        await runCommand("git", ["-C", destPath, "checkout", "-b", branch], (line, _, isCR) =>
+          onLine(line, false, isCR)
+        )
+      } finally {
+        stopThrottle()
+      }
+    }
+
+    onLine("--- Writing .workbench/config.yaml ---", true, false)
+    writeConfig(state.selectedOrg, state.codeRepos, state.resourceRepos, state.branches)
+    onLine("Config written successfully.", false, false)
+
+    if (state.shouldIndex) {
+      onLine("--- Running ck --index ---", true, false)
+      if (renderer) {
+        const indexSpinner = createSpinner(renderer, "Indexing...")
+        indexSpinner.start()
+        startThrottle()
+        try {
+          await runCommand("ck", ["--index"], (line, _, isCR) => onLine(line, false, isCR))
+          onLine("Indexing complete.", false, false)
+        } catch (err) {
+          onLine(`Warning: ck --index failed: ${err}. Continuing...`, false, false)
+        } finally {
+          indexSpinner.stop()
+          stopThrottle()
+        }
+      } else {
+        startThrottle()
+        try {
+          await runCommand("ck", ["--index"], (line, _, isCR) => onLine(line, false, isCR))
+          onLine("Indexing complete.", false, false)
+        } catch (err) {
+          onLine(`Warning: ck --index failed: ${err}. Continuing...`, false, false)
+        } finally {
+          stopThrottle()
+        }
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error as Error }
+  }
 }
 
 export function runInitFlow(
@@ -23,15 +142,12 @@ export function runInitFlow(
 ): void {
   const state: Partial<InitState> = {}
 
-  // Step 1: Org selection
   void showOrgSelect(renderer, (orgLogin) => {
     state.selectedOrg = orgLogin
 
-    // Step 2: Code repo selection
     void showRepoSelect(renderer, orgLogin, "Select Code Repositories (projects/)", (codeRepos) => {
       state.codeRepos = codeRepos
 
-      // Step 3: Resource repo selection
       void showRepoSelect(
         renderer,
         orgLogin,
@@ -39,21 +155,15 @@ export function runInitFlow(
         (resourceRepos) => {
           state.resourceRepos = resourceRepos
 
-          // Step 4: Branch configuration — deferred one tick so the Enter keypress
-          // that confirmed the second repo selection doesn't leak into branchConfig.
           const allRepos = [...codeRepos, ...resourceRepos]
           setTimeout(() => {
             showBranchConfig(renderer, allRepos, (branches) => {
               state.branches = branches
 
-              // Step 5: Indexing prompt — deferred one tick so the Enter keypress
-              // that confirmed branch config doesn't immediately fire ITEM_SELECTED
-              // on the index prompt's SelectRenderable before the user sees it.
               setTimeout(() => {
                 showIndexPrompt(renderer, (shouldIndex) => {
                   state.shouldIndex = shouldIndex
 
-                  // Execute init
                   void runInit(renderer, state as InitState, onComplete)
                 })
               }, 0)
@@ -70,115 +180,30 @@ async function runInit(
   state: InitState,
   onComplete: (initialized: boolean) => void
 ): Promise<void> {
-  const { appendLine, startThrottle, stopThrottle, container: execContainer } = showExecutingScreen(renderer)
+  const { appendLine, startThrottle, stopThrottle, container: execContainer } =
+    showExecutingScreen(renderer)
 
-  function onLine(line: string, _isStderr: boolean, isCarriageReturn: boolean): void {
-    appendLine(line, false, isCarriageReturn)
+  const progress: InitProgress = {
+    onLine: (line, isHeader, isCR) => appendLine(line, isHeader, isCR),
+    startThrottle,
+    stopThrottle,
   }
 
-  try {
-    // Step 1: Create .workbench/ directory
-    appendLine("--- Creating .workbench/ directory ---", true)
-    mkdirSync(".workbench", { recursive: true })
-    appendLine("Created .workbench/")
+  const result = await executeInit(state, progress, renderer)
 
-    // Step 2: Add code submodules
-    for (const repo of state.codeRepos) {
-      const branch = state.branches.get(repo.name) ?? repo.defaultBranch
-      const destPath = `projects/${repo.name}`
-
-      appendLine(`--- Adding ${destPath} ---`, true)
-      startThrottle()
-      try {
-        await runCommand("git", ["submodule", "add", repo.url, destPath], onLine)
-      } finally {
-        stopThrottle()
-      }
-
-      // Checkout/create branch
-      appendLine(`--- Checking out branch ${branch} for ${repo.name} ---`, true)
-      startThrottle()
-      try {
-        await runCommand("git", ["-C", destPath, "checkout", branch], onLine)
-      } catch {
-        // Branch doesn't exist remotely — create it locally
-        await runCommand("git", ["-C", destPath, "checkout", "-b", branch], onLine)
-      } finally {
-        stopThrottle()
-      }
-    }
-
-    // Step 3: Add resource submodules
-    for (const repo of state.resourceRepos) {
-      const branch = state.branches.get(repo.name) ?? repo.defaultBranch
-      const destPath = `resources/${repo.name}`
-
-      appendLine(`--- Adding ${destPath} ---`, true)
-      startThrottle()
-      try {
-        await runCommand("git", ["submodule", "add", repo.url, destPath], onLine)
-      } finally {
-        stopThrottle()
-      }
-
-      // Checkout/create branch
-      appendLine(`--- Checking out branch ${branch} for ${repo.name} ---`, true)
-      startThrottle()
-      try {
-        await runCommand("git", ["-C", destPath, "checkout", branch], onLine)
-      } catch {
-        // Branch doesn't exist remotely — create it locally
-        await runCommand("git", ["-C", destPath, "checkout", "-b", branch], onLine)
-      } finally {
-        stopThrottle()
-      }
-    }
-
-    // Step 4: Write config
-    appendLine("--- Writing .workbench/config.yaml ---", true)
-    writeConfig(state.selectedOrg, state.codeRepos, state.resourceRepos, state.branches)
-    appendLine("Config written successfully.")
-
-    // Step 5: Optional indexing (non-fatal)
-    if (state.shouldIndex) {
-      appendLine("--- Running ck --index ---", true)
-      const indexSpinner = createSpinner(renderer, "Indexing...")
-      indexSpinner.start()
-
-      startThrottle()
-      try {
-        await runCommand("ck", ["--index"], (line, isStderr, isCR) => {
-          appendLine(line, false, isCR)
-        })
-        appendLine("Indexing complete.")
-      } catch (err) {
-        appendLine(`Warning: ck --index failed: ${err}. Continuing...`)
-      } finally {
-        indexSpinner.stop()
-        stopThrottle()
-      }
-    }
-
+  if (result.success) {
     appendLine(" ", false)
     appendLine("--- Init complete! Press any key to return to menu ---", true)
-
-    // Wait for keypress then return to menu
-    const keypressHandler = (_key: KeyEvent) => {
-      renderer.keyInput.off("keypress", keypressHandler)
-      execContainer.visible = false
-      onComplete(true)
-    }
-    renderer.keyInput.on("keypress", keypressHandler)
-  } catch (err) {
+  } else {
     appendLine(" ", false)
-    appendLine(`--- Error: ${err} ---`, true)
+    appendLine(`--- Error: ${result.error} ---`, true)
     appendLine("Init aborted. Press any key to return to menu.", false)
-
-    const keypressHandler = (_key: KeyEvent) => {
-      renderer.keyInput.off("keypress", keypressHandler)
-      execContainer.visible = false
-      onComplete(false)
-    }
-    renderer.keyInput.on("keypress", keypressHandler)
   }
+
+  const keypressHandler = (_key: KeyEvent) => {
+    renderer.keyInput.off("keypress", keypressHandler)
+    execContainer.visible = false
+    onComplete(result.success)
+  }
+  renderer.keyInput.on("keypress", keypressHandler)
 }
