@@ -39,19 +39,26 @@ export function runInitFlow(
         (resourceRepos) => {
           state.resourceRepos = resourceRepos
 
-          // Step 4: Branch configuration
+          // Step 4: Branch configuration — deferred one tick so the Enter keypress
+          // that confirmed the second repo selection doesn't leak into branchConfig.
           const allRepos = [...codeRepos, ...resourceRepos]
-          showBranchConfig(renderer, allRepos, (branches) => {
-            state.branches = branches
+          setTimeout(() => {
+            showBranchConfig(renderer, allRepos, (branches) => {
+              state.branches = branches
 
-            // Step 5: Indexing prompt
-            showIndexPrompt(renderer, (shouldIndex) => {
-              state.shouldIndex = shouldIndex
+              // Step 5: Indexing prompt — deferred one tick so the Enter keypress
+              // that confirmed branch config doesn't immediately fire ITEM_SELECTED
+              // on the index prompt's SelectRenderable before the user sees it.
+              setTimeout(() => {
+                showIndexPrompt(renderer, (shouldIndex) => {
+                  state.shouldIndex = shouldIndex
 
-              // Execute init
-              void runInit(renderer, state as InitState, onComplete)
+                  // Execute init
+                  void runInit(renderer, state as InitState, onComplete)
+                })
+              }, 0)
             })
-          })
+          }, 0)
         }
       )
     })
