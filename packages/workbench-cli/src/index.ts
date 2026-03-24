@@ -141,13 +141,19 @@ async function runNonInteractiveInit(args: CliArgs): Promise<void> {
     shouldIndex: args.index,
   }
 
-  const silentProgress: InitProgress = {
-    onLine: () => {},
+  const stdoutProgress: InitProgress = {
+    onLine: (line, isHeader, isCR) => {
+      if (isCR) {
+        process.stdout.write(`\r${line}`)
+      } else {
+        console.log(line)
+      }
+    },
     startThrottle: () => {},
     stopThrottle: () => {},
   }
 
-  const result = await executeInit(state, silentProgress)
+  const result = await executeInit(state, stdoutProgress)
 
   if (!result.success) {
     console.error(result.error?.message || "Initialization failed")
