@@ -4,85 +4,155 @@ import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
 import { checkAuth, checkRepoRoot } from "./utils/gh.ts"
 import { showMainMenu } from "./screens/mainMenu.ts"
-import { runInitFlow } from "./commands/init.ts"
+import { runInitFlow, executeInit, type InitState, type InitProgress } from "./commands/init.ts"
+import { parseCliArgs, printHelp, type CliArgs } from "./args.ts"
+import { buildRepoFromUrl } from "./utils/repo.ts"
+import type { Repo } from "./screens/repoSelect.ts"
 
-// --- Startup validation (before TUI starts) ---
-checkAuth()
-checkRepoRoot()
+const args = parseCliArgs()
 
-// --- Renderer ---
-const renderer: CliRenderer = await createCliRenderer({
-  exitOnCtrlC: false,
-  exitSignals: ["SIGTERM", "SIGQUIT", "SIGABRT", "SIGHUP"],
-  targetFps: 30,
-})
-
-// --- Version badge ---
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const { version } = JSON.parse(
-  readFileSync(join(__dirname, "..", "package.json"), "utf-8")
-)
-
-const versionBadge = new TextRenderable(renderer, {
-  id: "version-badge",
-  content: `v${version}`,
-  fg: "#888888",
-  position: "absolute",
-  right: 1,
-  bottom: 0,
-  zIndex: 1000,
-})
-renderer.root.add(versionBadge)
-
-// --- Global double-Ctrl+C handler ---
-let ctrlCTimer: ReturnType<typeof setTimeout> | null = null
-let ctrlCNode: TextRenderable | null = null
-
-renderer.keyInput.on("keypress", (key) => {
-  if (key.ctrl && key.name === "c") {
-    if (ctrlCTimer !== null) {
-      clearTimeout(ctrlCTimer)
-      renderer.destroy()
-      process.exit(0)
-    } else {
-      ctrlCNode = new TextRenderable(renderer, {
-        id: "ctrl-c-prompt",
-        content: "Press Ctrl+C again to exit",
-        fg: "#FFFF00",
-      })
-      renderer.root.add(ctrlCNode)
-      ctrlCTimer = setTimeout(() => {
-        if (ctrlCNode) {
-          renderer.root.remove(ctrlCNode.id)
-          ctrlCNode = null
-        }
-        ctrlCTimer = null
-      }, 3000)
-    }
-  }
-})
-
-process.on("uncaughtException", () => {
-  renderer.destroy()
-  process.exit(1)
-})
-process.on("unhandledRejection", () => {
-  renderer.destroy()
-  process.exit(1)
-})
-
-// --- Check initial state ---
-const isInitialized = existsSync(".workbench/config.yaml")
-
-// --- Start main menu ---
-function launchMainMenu(initialized: boolean): void {
-  showMainMenu(renderer, initialized, {
-    onInit: () => runInitFlow(renderer, launchMainMenu),
-    onExit: () => {
-      renderer.destroy()
-      process.exit(0)
-    },
-  })
+if (args.help || process.argv.length === 2) {
+  printHelp()
+  process.exit(0)
 }
 
-launchMainMenu(isInitialized)
+if (args.tui) {
+  void runTuiMode()
+} else {
+  void runNonInteractiveInit(args)
+}
+
+async function runTuiMode(): Promise<void> {
+  checkAuth()
+  checkRepoRoot()
+
+  const renderer: CliRenderer = await createCliRenderer({
+    exitOnCtrlC: false,
+    exitSignals: ["SIGTERM", "SIGQUIT", "SIGABRT", "SIGHUP"],
+    targetFps: 30,
+  })
+
+  const __dirname = dirname(fileURLToPath(import.meta.url))
+  const { version } = JSON.parse(
+    readFileSync(join(__dirname, "..", "package.json"), "utf-8")
+  )
+
+  const versionBadge = new TextRenderable(renderer, {
+    id: "version-badge",
+    content: `v${version}`,
+    fg: "#888888",
+    position: "absolute",
+    right: 1,
+    bottom: 0,
+    zIndex: 1000,
+  })
+  renderer.root.add(versionBadge)
+
+  let ctrlCTimer: ReturnType<typeof setTimeout> | null = null
+  let ctrlCNode: TextRenderable | null = null
+
+  renderer.keyInput.on("keypress", (key) => {
+    if (key.ctrl && key.name === "c") {
+      if (ctrlCTimer !== null) {
+        clearTimeout(ctrlCTimer)
+        renderer.destroy()
+        process.exit(0)
+      } else {
+        ctrlCNode = new TextRenderable(renderer, {
+          id: "ctrl-c-prompt",
+          content: "Press Ctrl+C again to exit",
+          fg: "#FFFF00",
+        })
+        renderer.root.add(ctrlCNode)
+        ctrlCTimer = setTimeout(() => {
+          if (ctrlCNode) {
+            renderer.root.remove(ctrlCNode.id)
+            ctrlCNode = null
+          }
+          ctrlCTimer = null
+        }, 3000)
+      }
+    }
+  })
+
+  process.on("uncaughtException", () => {
+    renderer.destroy()
+    process.exit(1)
+  })
+  process.on("unhandledRejection", () => {
+    renderer.destroy()
+    process.exit(1)
+  })
+
+  const isInitialized = existsSync(".workbench/config.yaml")
+
+  function launchMainMenu(initialized: boolean): void {
+    showMainMenu(renderer, initialized, {
+      onInit: () => runInitFlow(renderer, launchMainMenu),
+      onExit: () => {
+        renderer.destroy()
+        process.exit(0)
+      },
+    })
+  }
+
+  launchMainMenu(isInitialized)
+}
+
+async function runNonInteractiveInit(args: CliArgs): Promise<void> {
+  if (!args.org) {
+    console.error("organization is required (--org)")
+    process.exit(1)
+  }
+
+  const hasRepos = args.codeRepositories.length > 0 || args.resourceRepositories.length > 0
+  if (!hasRepos) {
+    console.error("at least one repository required")
+    process.exit(1)
+  }
+
+  if (existsSync(".workbench")) {
+    console.error(".workbench/ already exists")
+    process.exit(1)
+  }
+
+  checkAuth()
+
+  const codeRepos: Repo[] = args.codeRepositories.map((url) =>
+    buildRepoFromUrl(url, args.codeBranch)
+  )
+  const resourceRepos: Repo[] = args.resourceRepositories.map((url) =>
+    buildRepoFromUrl(url, args.resourceBranch)
+  )
+
+  const branches = new Map<string, string>()
+  for (const repo of codeRepos) {
+    branches.set(repo.name, args.codeBranch)
+  }
+  for (const repo of resourceRepos) {
+    branches.set(repo.name, args.resourceBranch)
+  }
+
+  const state: InitState = {
+    selectedOrg: args.org,
+    codeRepos,
+    resourceRepos,
+    branches,
+    shouldIndex: args.index,
+  }
+
+  const silentProgress: InitProgress = {
+    onLine: () => {},
+    startThrottle: () => {},
+    stopThrottle: () => {},
+  }
+
+  const result = await executeInit(state, silentProgress)
+
+  if (!result.success) {
+    console.error(result.error?.message || "Initialization failed")
+    process.exit(1)
+  }
+
+  process.exit(0)
+}
