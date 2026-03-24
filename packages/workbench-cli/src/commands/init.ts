@@ -50,6 +50,16 @@ export async function executeInit(
         await runCommand("git", ["submodule", "add", repo.url, destPath], (line, _, isCR) =>
           onLine(line, false, isCR)
         )
+      } catch {
+        stopThrottle()
+        onLine(`--- Cleaning up stale submodule metadata for ${destPath} ---`, true, false)
+        try { await runCommand("git", ["submodule", "deinit", "-f", destPath], () => {}) } catch {}
+        try { await runCommand("git", ["rm", "-f", destPath], () => {}) } catch {}
+        try { await runCommand("rm", ["-rf", `.git/modules/${destPath}`], () => {}) } catch {}
+        startThrottle()
+        await runCommand("git", ["submodule", "add", repo.url, destPath], (line, _, isCR) =>
+          onLine(line, false, isCR)
+        )
       } finally {
         stopThrottle()
       }
@@ -76,6 +86,16 @@ export async function executeInit(
       onLine(`--- Adding ${destPath} ---`, true, false)
       startThrottle()
       try {
+        await runCommand("git", ["submodule", "add", repo.url, destPath], (line, _, isCR) =>
+          onLine(line, false, isCR)
+        )
+      } catch {
+        stopThrottle()
+        onLine(`--- Cleaning up stale submodule metadata for ${destPath} ---`, true, false)
+        try { await runCommand("git", ["submodule", "deinit", "-f", destPath], () => {}) } catch {}
+        try { await runCommand("git", ["rm", "-f", destPath], () => {}) } catch {}
+        try { await runCommand("rm", ["-rf", `.git/modules/${destPath}`], () => {}) } catch {}
+        startThrottle()
         await runCommand("git", ["submodule", "add", repo.url, destPath], (line, _, isCR) =>
           onLine(line, false, isCR)
         )
