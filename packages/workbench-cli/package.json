@@ -1,8 +1,16 @@
 {
-  "name": "workbench-cli",
+  "name": "@pap.dev/workbench",
   "version": "0.1.0",
+  "type": "module",
   "bin": {
-    "workbench": "./src/index.ts"
+    "workbench": "src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node --banner '#!/usr/bin/env node'",
+    "prepublishOnly": "bun run build"
   },
   "dependencies": {
     "@opentui/core": "^0.1.90",
@@ -12,5 +20,6 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.0.0",
     "typescript": "^5.0.0"
-  }
+  },
+  "license": "MIT"
 }
