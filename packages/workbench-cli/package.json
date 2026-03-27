@@ -9,6 +9,7 @@
     "dist"
   ],
   "scripts": {
+    "version": "node -e \"const j=require('./jsr.json');j.version=require('./package.json').version;require('fs').writeFileSync('./jsr.json',JSON.stringify(j,null,2)+'\\n')\" && git add jsr.json",
     "build": "bun build ./src/index.ts --outdir ./dist --target bun --banner '#!/usr/bin/env bun'",
     "prepublishOnly": "bun run build"
   },
