@@ -1,15 +1,15 @@
 {
   "name": "@pap.dev/workbench",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "bin": {
-    "workbench": "src/index.ts"
+    "workbench": "dist/index.js"
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target node --banner '#!/usr/bin/env node'",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun --banner '#!/usr/bin/env bun'",
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
