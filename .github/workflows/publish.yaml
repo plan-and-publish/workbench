@@ -27,6 +27,12 @@ jobs:
         run: bun run build
         working-directory: packages/workbench-cli
 
+      # Setup node for npm publish
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
       - name: Publish to npm
         run: npm publish --access public
         working-directory: packages/workbench-cli
