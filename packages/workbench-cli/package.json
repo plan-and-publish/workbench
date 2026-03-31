@@ -1,8 +1,21 @@
 {
-  "name": "workbench-cli",
-  "version": "0.1.0",
+  "name": "@pap.dev/workbench",
+  "version": "0.1.3",
+  "type": "module",
   "bin": {
-    "workbench": "./src/index.ts"
+    "workbench": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "version": "node -e \"const j=require('./jsr.json');j.version=require('./package.json').version;require('fs').writeFileSync('./jsr.json',JSON.stringify(j,null,2)+'\\n')\" && git add jsr.json",
+    "postversion": "git add -A && git commit -m \"chore: bump version to $(node -e \"console.log(require('./package.json').version)\")\" && git tag v$(node -e \"console.log(require('./package.json').version)\")",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun --banner '#!/usr/bin/env bun'",
+    "prepublishOnly": "bun run build",
+    "release:patch": "npm version patch --message 'chore: bump version to %s'",
+    "release:minor": "npm version minor --message 'chore: bump version to %s'",
+    "release:major": "npm version major --message 'chore: bump version to %s'"
   },
   "dependencies": {
     "@opentui/core": "^0.1.90",
@@ -12,5 +25,6 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.0.0",
     "typescript": "^5.0.0"
-  }
+  },
+  "license": "MIT"
 }
