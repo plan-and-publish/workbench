@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - feature/pap-7012-publish-the-package
 
 jobs:
   publish:
