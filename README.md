@@ -121,6 +121,10 @@ The commands are defined in [`.opencode/command/`](.opencode/command/) and can b
 
 The setup wizard optionally indexes your repositories with [ck](https://beaconbay.github.io/ck/) — a hybrid code search tool by [BeaconBay](https://github.com/beaconbay) that fuses lexical (BM25/grep) precision with embedding-based recall, so you can find the right code even when the exact keywords aren't there.
 
+## Acknowledgements
+
+workbench is inspired by [Cluster444/agentic](https://github.com/Cluster444/agentic), which pioneered the idea of a structured agentic development workflow using slash commands.
+
 ## Contributing
 
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, the development workflow, and how to submit a PR.
