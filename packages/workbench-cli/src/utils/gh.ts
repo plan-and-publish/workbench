@@ -63,3 +63,36 @@ export async function getRepos(orgLogin: string): Promise<GhRepo[]> {
     defaultBranch: r.defaultBranchRef?.name ?? "main",
   }))
 }
+
+export function validateRepoName(name: string): boolean {
+  return name.length > 0 && name.length <= 100 && /^[a-zA-Z0-9._-]+$/.test(name)
+}
+
+export async function repoExists(owner: string, repo: string): Promise<boolean> {
+  try {
+    await execFileAsync("gh", ["api", `/repos/${owner}/${repo}`], { encoding: "utf8" })
+    return true
+  } catch {
+    return false
+  }
+}
+
+export async function forkRepo(
+  sourceRepo: string,
+  targetOrg: string,
+  forkName: string
+): Promise<{ url: string; name: string }> {
+  const { stdout } = await execFileAsync("gh", [
+    "repo", "fork", sourceRepo,
+    "--org", targetOrg,
+    "--fork-name", forkName,
+    "--clone=false",
+    "--json", "url,name",
+  ], { encoding: "utf8" })
+  return JSON.parse(stdout)
+}
+
+export async function getCurrentUserLogin(): Promise<string> {
+  const { stdout } = await execFileAsync("gh", ["api", "/user", "--jq", ".login"], { encoding: "utf8" })
+  return stdout.trim()
+}
