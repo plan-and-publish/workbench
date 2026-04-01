@@ -18,10 +18,10 @@ You will be given a Linear issue ID. You will fetch the ticket, plan, and execut
      > "The status-ticket label is currently `{value}`, not `implemented`. Review is intended to run after execution. Do you want to proceed anyway?"
    - Wait for explicit confirmation before continuing if the label is not `implemented`
    - Read the issue `description` field — this is the ticket content
-   - Fetch all attachments:
-     - For each entry in `attachments[]`, call `linear_get_attachment` with the attachment `id`
-     - Decode each base64 result: `echo "$base64_content" | base64 --decode`
-   - Identify key attachments by their `title` prefix:
+   - Fetch all documents linked to the issue:
+      - Call `linear_list_documents` with the issue ID to list documents associated with it
+      - For each document, call `linear_get_document` with the document `id` to retrieve its content
+   - Identify key documents by their `title` prefix:
      - Plan: `title` starts with `"Plan:"`
      - Execution Notes: `title` starts with `"Execution Notes:"`
      - Research: `title` starts with `"Research:"`
@@ -69,14 +69,11 @@ Create comprehensive validation summary and:
    (e.g. `thoughts/reviews/PAP-7003_amend_agentic_commands_review.md`)
    This is a convenience copy only — it must not be used as input by any command.
 
-2. **Attach the review to the Linear issue**:
-   1. Encode: `base64 < thoughts/reviews/{issue_id}_{plan_name}_review.md` via Bash tool
-   2. Call `linear_create_attachment` with:
-      - `issue`: the Linear issue ID
-      - `base64Content`: the encoded string
-      - `filename`: `{issue_id}_{plan_name}_review.md`
-      - `contentType`: `"text/markdown"`
-      - `title`: `"Review: {issue_id} - {plan_name}"`
+   2. **Create a Linear document for the issue**:
+      - Call `linear_create_document` with:
+         - `issue`: the Linear issue ID
+         - `title`: `"Review: {issue_id} - {plan_name}"`
+         - `content`: the full markdown content of the review
 
 Use this report structure:
 
