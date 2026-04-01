@@ -16,7 +16,7 @@ const SCREEN_ID = "init-org-select-screen"
 export async function showInitOrgSelect(
   renderer: CliRenderer,
   preselectedOrg: string | undefined,
-  onSelect: (orgLogin: string) => void
+  onSelect: (orgLogin: string, isPersonalAccount: boolean) => void
 ): Promise<void> {
   const existing = renderer.root.getRenderable(SCREEN_ID)
   if (existing) {
@@ -117,7 +117,9 @@ export async function showInitOrgSelect(
     (_index: number, option: { value: string }) => {
       renderer.keyInput.off("keypress", keypressHandler)
       container.visible = false
-      onSelect(option.value)
+      const selectedOrg = orgs.find((o) => o.login === option.value)
+      const isPersonalAccount = selectedOrg?.description === "Personal account"
+      onSelect(option.value, isPersonalAccount)
     }
   )
 

@@ -176,6 +176,7 @@ async function runNonInteractiveInitCmd(args: CliArgs): Promise<void> {
     name: args.name,
     noFork: args.noFork,
     targetOrg,
+    isPersonalAccount: !args.org,
   }
 
   const validationError = validateInitialiseState(state)

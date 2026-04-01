@@ -5,7 +5,6 @@ import { showInitOrgSelect } from "../screens/initOrgSelect.ts"
 import { showInitNameInput } from "../screens/initNameInput.ts"
 import { showInitSetupPrompt } from "../screens/initSetupPrompt.ts"
 import { showExecutingScreen } from "../screens/executing.ts"
-import { createSpinner } from "../utils/spinner.ts"
 import type { InitProgress } from "./init.ts"
 import type { CliRenderer } from "@opentui/core"
 import type { CliArgs } from "../args.ts"
@@ -16,6 +15,7 @@ export interface InitialiseState {
   name: string
   noFork: boolean
   targetOrg: string
+  isPersonalAccount: boolean
 }
 
 export interface InitialiseResult {
@@ -35,10 +35,11 @@ export function validateInitialiseState(state: InitialiseState): string | null {
 }
 
 export async function executeFork(
-  state: InitialiseState
-): Promise<{ success: boolean; error?: string; cloneUrl?: string }> {
+  state: InitialiseState,
+  progress: InitProgress
+): Promise<{ success: boolean; error?: string }> {
   if (state.noFork) {
-    return { success: true, cloneUrl: `https://github.com/${SOURCE_REPO}.git` }
+    return { success: true }
   }
 
   const exists = await repoExists(state.targetOrg, state.name)
@@ -46,8 +47,21 @@ export async function executeFork(
     return { success: false, error: `A repository named "${state.name}" already exists under ${state.targetOrg}.` }
   }
 
-  const forkResult = await forkRepo(SOURCE_REPO, state.targetOrg, state.name)
-  return { success: true, cloneUrl: forkResult.url }
+  const { onLine, startThrottle, stopThrottle } = progress
+  onLine(`--- Forking and cloning into ./${state.name}/ ---`, true, false)
+  startThrottle()
+  try {
+    await forkRepo(
+      SOURCE_REPO,
+      state.isPersonalAccount ? undefined : state.targetOrg,
+      state.name,
+      (line, isStderr, isCR) => onLine(line, false, isCR)
+    )
+  } finally {
+    stopThrottle()
+  }
+
+  return { success: true }
 }
 
 export async function executeClone(
@@ -65,7 +79,7 @@ export async function executeClone(
     onLine(`--- Cloning into ./${name}/ ---`, true, false)
     startThrottle()
     try {
-      await runCommand("git", ["clone", "--depth", "1", cloneUrl, name], (line, _, isCR) =>
+      await runCommand("git", ["clone", "--depth", "1", "--single-branch", cloneUrl, name], (line, _, isCR) =>
         onLine(line, false, isCR)
       )
     } finally {
@@ -90,12 +104,19 @@ export async function executeInitialise(
     return { success: false, error: validationError }
   }
 
-  const forkResult = await executeFork(state)
+  if (state.noFork) {
+    const cloneUrl = `https://github.com/${SOURCE_REPO}.git`
+    return executeClone(cloneUrl, state.name, progress)
+  }
+
+  const forkResult = await executeFork(state, progress)
   if (!forkResult.success) {
     return { success: false, error: forkResult.error }
   }
 
-  return executeClone(forkResult.cloneUrl!, state.name, progress)
+  process.chdir(state.name)
+  progress.onLine(`Working directory changed to ./${state.name}/`, false, false)
+  return { success: true, targetDir: state.name }
 }
 
 export function runInitialiseFlow(
@@ -103,10 +124,10 @@ export function runInitialiseFlow(
   args: CliArgs,
   onComplete: () => void
 ): void {
-  void showInitOrgSelect(renderer, args.org, (targetOrg) => {
+  void showInitOrgSelect(renderer, args.org, (targetOrg, isPersonalAccount) => {
     setTimeout(() => {
       showInitNameInput(renderer, args.name, (name) => {
-        const state: InitialiseState = { name, noFork: args.noFork, targetOrg }
+        const state: InitialiseState = { name, noFork: args.noFork, targetOrg, isPersonalAccount }
         void runTuiInitialise(renderer, state, (success) => {
           if (!success) {
             onComplete()
@@ -134,30 +155,6 @@ async function runTuiInitialise(
   state: InitialiseState,
   onDone: (success: boolean) => void
 ): Promise<void> {
-  let cloneUrl: string
-
-  if (!state.noFork) {
-    const spinner = createSpinner(renderer, `Forking to ${state.targetOrg}/${state.name}...`)
-    spinner.start()
-    const forkResult = await executeFork(state)
-    spinner.stop()
-
-    if (!forkResult.success) {
-      const { appendLine, container } = showExecutingScreen(renderer)
-      appendLine(`Error: ${forkResult.error}`, true)
-      const handler = () => {
-        renderer.keyInput.off("keypress", handler)
-        container.visible = false
-        onDone(false)
-      }
-      renderer.keyInput.on("keypress", handler)
-      return
-    }
-    cloneUrl = forkResult.cloneUrl!
-  } else {
-    cloneUrl = `https://github.com/${SOURCE_REPO}.git`
-  }
-
   const { appendLine, startThrottle, stopThrottle, container } = showExecutingScreen(renderer)
   const progress: InitProgress = {
     onLine: (line, isHeader, isCR) => appendLine(line, isHeader, isCR),
@@ -165,18 +162,35 @@ async function runTuiInitialise(
     stopThrottle,
   }
 
-  const result = await executeClone(cloneUrl, state.name, progress)
+  let success: boolean
 
-  if (!result.success) {
-    appendLine(`Error: ${result.error}`, true)
+  if (!state.noFork) {
+    const forkResult = await executeFork(state, progress)
+    if (!forkResult.success) {
+      appendLine(`Error: ${forkResult.error}`, true)
+      success = false
+    } else {
+      process.chdir(state.name)
+      progress.onLine(`Working directory changed to ./${state.name}/`, false, false)
+      success = true
+    }
   } else {
+    const cloneUrl = `https://github.com/${SOURCE_REPO}.git`
+    const result = await executeClone(cloneUrl, state.name, progress)
+    success = result.success
+    if (!result.success) {
+      appendLine(`Error: ${result.error}`, true)
+    }
+  }
+
+  if (success) {
     appendLine("--- Initialisation complete ---", true)
   }
 
   const handler = () => {
     renderer.keyInput.off("keypress", handler)
     container.visible = false
-    onDone(result.success)
+    onDone(success)
   }
   renderer.keyInput.on("keypress", handler)
 }
