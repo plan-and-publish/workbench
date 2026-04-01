@@ -9,6 +9,10 @@ export interface CliArgs {
   codeBranch: string
   resourceBranch: string
   index: boolean
+  init: boolean
+  noFork: boolean
+  name: string
+  noTui: boolean
 }
 
 export function parseCliArgs(): CliArgs {
@@ -22,6 +26,10 @@ export function parseCliArgs(): CliArgs {
       "code-branch": { type: "string", default: "main" },
       "resource-branch": { type: "string", default: "main" },
       index: { type: "string", default: "on" },
+      init: { type: "boolean", default: false },
+      "no-fork": { type: "boolean", default: false },
+      name: { type: "string", default: "workbench" },
+      "no-tui": { type: "boolean", default: false },
     },
     strict: true,
     allowPositionals: false,
@@ -36,6 +44,10 @@ export function parseCliArgs(): CliArgs {
     codeBranch: values["code-branch"] as string,
     resourceBranch: values["resource-branch"] as string,
     index: values.index === "on",
+    init: values.init,
+    noFork: values["no-fork"] as boolean,
+    name: values.name as string,
+    noTui: values["no-tui"] as boolean,
   }
 }
 
@@ -43,13 +55,18 @@ export function printHelp(): void {
   console.log(`workbench - Initialize a development workbench
 
 USAGE:
-  workbench --org <name> --code-repository <url> [--code-repository <url>...] [options]
-  workbench --org <name> --resource-repository <url> [--resource-repository <url>...] [options]
+  workbench --init [options]
+  workbench --init --no-tui [options]
+  workbench --org <name> --code-repository <url> [options]
   workbench --tui
   workbench --help
 
 OPTIONS:
-  --org <name>                    GitHub organization name (required for non-interactive)
+  --init                          Initialize a new workbench (fork & clone)
+  --name <name>                   Name for the fork and local folder (default: workbench)
+  --no-fork                       Clone without forking (read-only)
+  --no-tui                        Skip TUI, use defaults or provided values
+  --org <name>                    GitHub organization name
   --code-repository <url>         Code repository URL (can be repeated)
   --resource-repository <url>     Resource repository URL (can be repeated)
   --code-branch <name>            Branch for all code repositories (default: main)
@@ -59,13 +76,11 @@ OPTIONS:
   --help                          Display this help message
 
 EXAMPLES:
+  workbench --init
+  workbench --init --no-tui --name my-project
+  workbench --init --no-tui --no-fork --name explore-wb
+  workbench --init --no-tui --name my-project --org myorg --code-repository https://github.com/myorg/api
   workbench --org myorg --code-repository https://github.com/myorg/backend
-
-  workbench --org myorg --code-repository https://github.com/myorg/api \\
-                       --code-repository https://github.com/myorg/web \\
-                       --resource-repository https://github.com/myorg/docs \\
-                       --code-branch develop --index off
-
   workbench --tui
 `)
 }

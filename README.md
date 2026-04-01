@@ -43,6 +43,32 @@ bun link
 bun run packages/workbench-cli/src/index.ts
 ```
 
+### Quick Start
+
+**Interactive init** — fork, clone, and set up in one flow:
+
+```bash
+workbench --init
+```
+
+**Non-interactive init** — create with defaults:
+
+```bash
+workbench --init --no-tui --name my-project
+```
+
+**Init + setup combined:**
+
+```bash
+workbench --init --no-tui --name my-project --org myorg --code-repository https://github.com/myorg/api
+```
+
+**Manual alternative** — fork/clone the repo yourself, then:
+
+```bash
+workbench --tui
+```
+
 ### Usage
 
 Run `workbench` from the workbench repository root. Select `init` to walk through:
@@ -54,3 +80,5 @@ Run `workbench` from the workbench repository root. Select `init` to walk throug
 5. Optionally index with `ck`
 
 After init, `.workbench/config.yaml` is written with the selected configuration.
+
+See [packages/workbench-cli/README.md](packages/workbench-cli/README.md) for full documentation.
