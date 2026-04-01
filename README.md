@@ -72,6 +72,51 @@ workbench --tui
 
 See [packages/workbench-cli/README.md](packages/workbench-cli/README.md) for the full flag reference and examples.
 
+## Working on issues with OpenCode
+
+Once your workbench is set up, the primary way to work on issues is through [OpenCode](https://opencode.ai/) using the built-in slash commands. These commands implement a structured flow from issue analysis through to review.
+
+### Prerequisites
+
+- [OpenCode](https://opencode.ai/) installed
+- Linear MCP authenticated (see [MCP — Linear](#mcp--linear) above)
+
+### The development flow
+
+```
+/ticket → /research → /plan → /execute → /commit → /review
+```
+
+Each command takes a Linear issue ID as its argument and is best run in a fresh OpenCode session:
+
+| Command | What it does |
+|---------|-------------|
+| `/ticket {issue-id}` | Analyses the Linear issue and structures it for development |
+| `/research {issue-id}` | Researches the codebase in context of the issue |
+| `/plan {issue-id}` | Creates a detailed implementation plan |
+| `/execute {issue-id}` | Implements the plan |
+| `/commit` | Commits the changes in atomic commits, ready for review |
+| `/review {issue-id}` | Reviews the execution against the plan |
+
+### Example
+
+```bash
+# Start a new OpenCode session, then:
+/ticket PAP-1234
+# Read the output, open a new session
+/research PAP-1234
+# Open a new session
+/plan PAP-1234
+# Open a new session
+/execute PAP-1234
+# Once done:
+/commit
+# Open a new session
+/review PAP-1234
+```
+
+The commands are defined in [`.opencode/command/`](.opencode/command/) and can be customised for your own workflow.
+
 ## Code indexing with ck
 
 The setup wizard optionally indexes your repositories with [ck](https://beaconbay.github.io/ck/) — a hybrid code search tool by [BeaconBay](https://github.com/beaconbay) that fuses lexical (BM25/grep) precision with embedding-based recall, so you can find the right code even when the exact keywords aren't there.
