@@ -1,6 +1,11 @@
-# Workbench
+# workbench CLI
 
-The `workbench` CLI provides a terminal UI for initializing the workbench repository.
+[![CI](https://github.com/plan-and-publish/workbench/actions/workflows/ci-workbench-cli.yml/badge.svg)](https://github.com/plan-and-publish/workbench/actions/workflows/ci-workbench-cli.yml)
+[![npm](https://img.shields.io/npm/v/@pap.dev/workbench)](https://www.npmjs.com/package/@pap.dev/workbench)
+[![JSR](https://jsr.io/badges/@pap/workbench)](https://jsr.io/@pap/workbench)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
+
+A terminal UI for initializing a workbench repository — fork, clone, and wire up git submodules interactively or non-interactively.
 
 ## Prerequisites
 
@@ -9,50 +14,43 @@ The `workbench` CLI provides a terminal UI for initializing the workbench reposi
 
 ## Installation
 
-To install dependencies and link the CLI locally:
-
 ```bash
+cd packages/workbench-cli
 bun install
 bun link
 ```
 
-After linking, the `workbench` command will be available globally on your system.
+After linking, the `workbench` command is available globally.
 
-## Run (without installing)
-
-You can run the CLI directly from the source without linking:
+## Run without installing
 
 ```bash
 bun run src/index.ts
 ```
 
-## Quick Start
+## Quick start
 
 ### Interactive (TUI)
-
-Create a new workbench from scratch:
 
 ```bash
 workbench --init
 ```
 
-This launches an interactive flow: select a fork target (org or personal account), name your workbench, fork and clone the template repo, then optionally run the setup wizard.
+Launches an interactive flow: select a fork target (org or personal account), name your workbench, fork and clone the template repo, then optionally run the setup wizard.
 
 ### Non-interactive
-
-Create a workbench without prompts:
 
 ```bash
 workbench --init --no-tui --name my-project
 ```
 
-### Combined (init + setup in one command)
+### Init + setup in one command
 
 ```bash
 workbench --init --no-tui --name my-project --org myorg --code-repository https://github.com/myorg/api
 ```
 
-### Manual Setup
+### Existing repo
 
 If you already have a workbench repo cloned:
 
@@ -60,7 +58,7 @@ If you already have a workbench repo cloned:
 workbench --tui
 ```
 
-## Init Flags
+## Init flags
 
 | Flag | Description | Default |
 |------|-------------|---------|
@@ -69,19 +67,21 @@ workbench --tui
 | `--no-fork` | Clone without forking (read-only) | `false` |
 | `--no-tui` | Skip TUI, use defaults or provided values | `false` |
 
-## Setup Flags
+## Setup flags
 
 These flags work with both `--init` and standalone usage:
 
 | Flag | Description | Default |
 |------|-------------|---------|
 | `--org <name>` | GitHub organization name | personal account |
-| `--code-repository <url>` | Code repository URL (can be repeated) | - |
-| `--resource-repository <url>` | Resource repository URL (can be repeated) | - |
+| `--code-repository <url>` | Code repository URL (can be repeated) | — |
+| `--resource-repository <url>` | Resource repository URL (can be repeated) | — |
 | `--code-branch <name>` | Branch for all code repositories | `main` |
 | `--resource-branch <name>` | Branch for all resource repositories | `main` |
-| `--index <on\|off>` | Run indexing after init | `on` |
+| `--index <on\|off>` | Run [ck](https://beaconbay.github.io/ck/) indexing after init | `on` |
 | `--tui` | Launch interactive TUI mode | `false` |
+
+> **What is ck?** [ck](https://beaconbay.github.io/ck/) is a hybrid code search tool by [BeaconBay](https://github.com/beaconbay) that fuses lexical (BM25/grep) precision with embedding-based recall, so you can find the right code even when the exact keywords aren't there.
 
 ## Examples
 
@@ -105,7 +105,19 @@ workbench --org myorg --code-repository https://github.com/myorg/backend
 workbench --tui
 ```
 
-## Error Scenarios
+## What the setup wizard does
+
+Running init walks through:
+
+1. Select a GitHub organization or personal account.
+2. Select code repositories — added as submodules under `projects/`.
+3. Select resource repositories — added as submodules under `resources/`.
+4. Configure the target branch per repository.
+5. Optionally index with [ck](https://beaconbay.github.io/ck/).
+
+Afterwards, `.workbench/config.yaml` is written with the selected configuration.
+
+## Error scenarios
 
 | Error | Cause | Resolution |
 |-------|-------|------------|
@@ -114,14 +126,37 @@ workbench --tui
 | `gh CLI is not authenticated` | `gh auth` not set up | Run `gh auth login` |
 | `Invalid name "X"` | Bad characters in name | Use only alphanumeric, `-`, `.`, `_` |
 
-## Usage (Existing Repo)
+## Development
 
-Run the `workbench` command from the workbench repository root. Select `init` to walk through the interactive setup:
+```bash
+# Type-check
+bun tsc --noEmit
 
-1. Select a GitHub organization or personal account.
-2. Select code repositories (added as submodules under the `projects/` directory).
-3. Select resource repositories (added as submodules under the `resources/` directory).
-4. Configure the target branch per repository.
-5. Optionally index with `ck`.
+# Build
+bun run build
 
-After initialization, the selected configuration is written to `.workbench/config.yaml`.
+# Smoke test the built output
+./dist/index.js --help
+```
+
+Source lives in `src/`. The entry point is `src/index.ts`.
+
+## Releases
+
+Releases are tag-driven and publish to both npm and JSR automatically. Maintainers run:
+
+```bash
+npm run release:patch   # 0.1.x
+npm run release:minor   # 0.x.0
+npm run release:major   # x.0.0
+```
+
+See [GitHub Releases](https://github.com/plan-and-publish/workbench/releases) for the version history.
+
+## Contributing
+
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for the full guide.
+
+## License
+
+MIT — see [LICENSE](../../LICENSE).
