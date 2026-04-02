@@ -15,4 +15,18 @@
             "enabled": true 
         }
     },
+    "agent": {
+        "general": {
+            "tools": {
+                "ck_semantic_search": true,
+                "ck_hybrid_search": true
+            }
+        },
+        "explore": {
+            "tools": {
+                "ck_semantic_search": true,
+                "ck_hybrid_search": true
+            }
+        }
+    }
 }

@@ -26,7 +26,16 @@ You will be given a Linear issue ID. You will fetch the ticket, plan, and execut
      - Execution Notes: `title` starts with `"Execution Notes:"`
      - Research: `title` starts with `"Research:"`
    - Use the plan and execution notes as the primary review context. Research is supplementary.
-   - **IMPORTANT**: Do not read any local `thoughts/` files as inputs.
+    - **IMPORTANT**: Do not read any local `thoughts/` files as inputs.
+    - **Detect pathway context:**
+      - Load the workbench-context skill: `skill({ name: 'workbench-context' })`
+      - Check if `.workbench/config.yaml` exists in the repository root
+        - If present: pathway_mode = "configured" (Pathway 2)
+        - If absent: pathway_mode = "workbench" (Pathway 1)
+      - Run `which ck` via Bash to check if ck CLI is installed
+      - If installed, run `ck --status` to verify index readiness
+      - On ck failure: warn the user and continue (graceful degradation)
+      - Store resolved pathway_mode and ck_available for all downstream agent prompts
 
 2. **Identify what should have changed**:
    - List all files that should be modified according to the plan
@@ -34,9 +43,10 @@ You will be given a Linear issue ID. You will fetch the ticket, plan, and execut
    - Identify key functionality to verify
 
 3. **Identify actual changes by examining the codebase:**
-   - Use the **codebase-locator** task to find all files related to the components that were supposed to change
-   - Use the **codebase-analyzer** task to understand what the implementation actually does
-   - Compare actual implementation to plan specifications
+    - Use the **codebase-locator** task to find all files related to the components that were supposed to change
+    - Use the **codebase-analyzer** task to understand what the implementation actually does
+    - **Include pathway context** when spawning codebase-locator and codebase-analyzer agents
+    - Compare actual implementation to plan specifications
    - Return file-by-file comparison of planned vs actual
 
 ### Step 2: Systematic Validation

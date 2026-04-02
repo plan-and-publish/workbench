@@ -16,7 +16,16 @@ The user will provide a Linear issue ID. You will fetch the ticket from Linear a
      > "The status-ticket label is currently `{value}`, not `open`. Research is intended to run after the ticket phase. Do you want to proceed anyway?"
    - Wait for explicit confirmation before continuing if the label is not `open`
    - Read the issue `description` field — this is the ticket content
-   - **IMPORTANT**: Do not read the ticket from any local file. The Linear issue description is the sole source of truth.
+    - **IMPORTANT**: Do not read the ticket from any local file. The Linear issue description is the sole source of truth.
+    - **Detect pathway context:**
+      - Load the workbench-context skill: `skill({ name: 'workbench-context' })`
+      - Check if `.workbench/config.yaml` exists in the repository root
+        - If present: pathway_mode = "configured" (Pathway 2)
+        - If absent: pathway_mode = "workbench" (Pathway 1)
+      - Run `which ck` via Bash to check if ck CLI is installed
+      - If installed, run `ck --status` to verify index readiness
+      - On ck failure: warn the user and continue (graceful degradation)
+      - Store resolved pathway_mode and ck_available for all downstream agent prompts
 
 2. **Detail the steps needed to perform the research:**
     - Break down the user's ticket into composable research areas
@@ -54,8 +63,9 @@ The user will provide a Linear issue ID. You will fetch the ticket from Linear a
    - Each phase builds on the previous one - locators inform pattern-finding, both inform analysis
    - Run agents of the same type in parallel within each phase
    - Never mix agent types in parallel execution
-   - Each agent knows its job - just tell it what you're looking for
-   - Don't write detailed prompts about HOW to search - the agents already know
+    - Each agent knows its job - just tell it what you're looking for
+    - **Include pathway context** in every spawned agent's prompt using the format from the workbench-context skill
+    - Don't write detailed prompts about HOW to search - the agents already know
 
 4. **Wait for all sub-agents to complete and synthesize findings:**
    - IMPORTANT: Wait for ALL sub-agent tasks to complete before proceeding

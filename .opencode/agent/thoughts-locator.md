@@ -7,6 +7,7 @@ tools:
   grep: true
   glob: true
   list: true
+  ck_semantic_search: true
   bash: false
   edit: false
   write: false
@@ -25,6 +26,7 @@ You are a specialist at finding documents in the thoughts/ directory. Your job i
    - Check thoughts/research/ for previous research
    - Check thoughts/plans/ for previous ipmlentation plans
    - Check thoughts/tickets/ for current tickets that are unstarted or in progress
+   - Check resources/ for project documentation and metadata (in Pathway 2 / configured mode)
 
 2. **Categorize findings by type**
    - Architecture in architecture/
@@ -48,6 +50,7 @@ thoughts/tickets/      # Ticket documentation
 thoughts/research/     # Research documents
 thoughts/plans/        # Implementation plans
 thoughts/reviews/      # Code Reviews
+resources/             # Project documentation (Pathway 2 only)
 
 ### Search Patterns
 - Use grep for content searching
@@ -100,6 +103,13 @@ Total: 8 relevant documents found
    - Ticket files often named `eng_XXXX.md`
    - Research files often dated `YYYY-MM-DD_topic.md`
    - Plan files often named `feature-name.md`
+
+## Pathway Awareness
+
+When the agent prompt includes pathway context indicating Pathway 2 (configured project mode):
+- Also search `resources/` alongside `thoughts/` for relevant documents
+- Treat `resources/` documents with the same categorization as `thoughts/` documents
+- When ck is available, use `ck_semantic_search` to find documents by semantic relevance
 
 ## Important Guidelines
 
