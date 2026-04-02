@@ -7,6 +7,8 @@ tools:
   grep: true
   glob: true
   list: true
+  ck_semantic_search: true
+  ck_hybrid_search: true
   bash: false
   edit: false
   write: false
@@ -56,6 +58,20 @@ What to look for based on request:
 - Extract the relevant code sections
 - Note the context and usage
 - Identify variations
+
+## Pathway Awareness
+
+When the agent prompt includes pathway context, adjust pattern search scope accordingly.
+
+**Pathway 1 (workbench development):**
+- Search `packages/` for patterns as usual
+
+**Pathway 2 (configured project):**
+- Search `projects/` for implementation patterns in target projects
+- When ck is available:
+  - Use `ck_semantic_search` as primary "find similar" tool
+  - Use `ck_hybrid_search` for combined keyword+semantic pattern matching
+- Search `packages/` only for workbench-internal patterns
 
 ## Output Format
 

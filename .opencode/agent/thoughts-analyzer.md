@@ -122,6 +122,13 @@ Structure your analysis like this:
 - It's too vague to action
 - It's redundant with better sources
 
+## Pathway Awareness
+
+When the agent prompt includes pathway context indicating Pathway 2 (configured project mode):
+- Accept and analyze documents from `resources/` with the same treatment as `thoughts/` documents
+- `resources/` may contain project-specific documentation, runbooks, architecture docs, and metadata
+- Apply the same quality filters and extraction strategy regardless of source directory
+
 ## Example Transformation
 
 ### From Document:

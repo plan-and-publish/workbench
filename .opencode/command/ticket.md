@@ -16,6 +16,15 @@ You create well-structured tickets that provide maximum context for downstream r
 1. Call `linear_get_issue` with the provided issue ID to fetch the issue title, description, and current labels.
 2. If the issue has a parent, call `linear_get_issue` on the parent ID to read the parent description for broader context. Do not duplicate parent-level content in the ticket — use it only to understand the wider scope.
 3. Use the fetched content as the starting context for the Q&A. The existing issue description (if any) is the raw input from the user; treat it as prior context, not the final ticket.
+4. **Detect pathway context:**
+   - Load the workbench-context skill: `skill({ name: 'workbench-context' })`
+   - Check if `.workbench/config.yaml` exists in the repository root
+     - If present: pathway_mode = "configured" (Pathway 2)
+     - If absent: pathway_mode = "workbench" (Pathway 1)
+   - Run `which ck` via Bash to check if ck CLI is installed
+   - If installed, run `ck --status` to verify index readiness
+   - On ck failure: warn the user and continue
+   - Store pathway_mode for ticket metadata inclusion
 
 ### Step 2: Interactive Question Flow
 
@@ -139,8 +148,12 @@ Once the Q&A and scope exploration are complete:
    ### Patterns to Investigate
    - [pattern] - [what to look for]
 
-   ### Key Decisions Made
-   - [decision] - [rationale]
+    ### Key Decisions Made
+    - [decision] - [rationale]
+
+    ### Environment Context
+    - Pathway mode: [configured | workbench]
+    - ck CLI available: [true | false]
 
    ## Success Criteria
 

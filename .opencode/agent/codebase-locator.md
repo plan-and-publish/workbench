@@ -7,6 +7,8 @@ tools:
   grep: true
   glob: true
   list: true
+  ck_semantic_search: true
+  ck_hybrid_search: true
   bash: false
   edit: false
   write: false
@@ -95,6 +97,23 @@ Structure your findings like this:
 - `src/index.js` - Imports feature module at line 23
 - `api/routes.js` - Registers feature routes
 ```
+
+## Pathway Awareness
+
+When the agent prompt includes pathway context, adjust search scope accordingly.
+
+**Pathway 1 (workbench development):**
+- Search `packages/` as the primary code scope — no changes to default behavior
+
+**Pathway 2 (configured project):**
+- Primary search scope shifts to `projects/` for target project source code
+- Search `packages/` only when the task specifically relates to workbench CLI internals
+- Discover available projects by listing `projects/` directory
+- When ck is available (indicated in pathway context):
+  - Use `ck_semantic_search` for intent-based file discovery ("find files related to authentication")
+  - Use `ck_hybrid_search` for combined keyword+semantic queries
+  - Always complement with grep/glob for comprehensive coverage
+- When ck is unavailable: use grep/glob only — no degradation in thoroughness
 
 ## Important Guidelines
 

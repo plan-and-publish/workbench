@@ -20,7 +20,16 @@ You are tasked with creating detailed implementation plans through an interactiv
       - Call `linear_list_documents` with the issue ID to list documents associated with it
       - For each document, call `linear_get_document` with the document `id` to retrieve its content
       - Treat all documents as context (research documents, prior artefacts)
-   - **IMPORTANT**: Do not read any local `thoughts/` files as inputs. Linear is the sole source of truth.
+    - **IMPORTANT**: Do not read any local `thoughts/` files as inputs. Linear is the sole source of truth.
+    - **Detect pathway context:**
+      - Load the workbench-context skill: `skill({ name: 'workbench-context' })`
+      - Check if `.workbench/config.yaml` exists in the repository root
+        - If present: pathway_mode = "configured" (Pathway 2)
+        - If absent: pathway_mode = "workbench" (Pathway 1)
+      - Run `which ck` via Bash to check if ck CLI is installed
+      - If installed, run `ck --status` to verify index readiness
+      - On ck failure: warn the user and continue (graceful degradation)
+      - Store resolved pathway_mode and ck_available for all downstream agent prompts
 
 2. **Spawn initial research tasks to gather context:**
    Before asking the user any questions, use specialized agents to research in parallel:
@@ -93,7 +102,8 @@ After getting initial clarifications:
    - Identify conventions and patterns to follow
    - Look for integration points and dependencies
    - Return specific file:line references
-   - Find tests and examples
+    - Find tests and examples
+    - **Include pathway context** in every spawned agent's prompt using the format from the workbench-context skill
 
 4. **Wait for ALL sub-tasks to complete** before proceeding
 

@@ -58,6 +58,7 @@ When something isn't working as expected:
 - Present the mismatch clearly and ask for guidance
 
 Use sub-tasks sparingly - mainly for targeted debugging or exploring unfamiliar territory.
+- When spawning sub-tasks, include pathway context in agent prompts using the format from the workbench-context skill
 
 ## Resuming Work
 
@@ -84,13 +85,23 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
         > "No plan document was found on issue {issue_id}. Cannot proceed with execution. Please run /plan first."
       - Do not proceed until a plan document is confirmed present.
    - Treat all other documents (research, prior artefacts) as additional context.
-   - **IMPORTANT**: Do not read any local `thoughts/` files as inputs.
+    - **IMPORTANT**: Do not read any local `thoughts/` files as inputs.
+    - **Detect pathway context:**
+      - Load the workbench-context skill: `skill({ name: 'workbench-context' })`
+      - Check if `.workbench/config.yaml` exists in the repository root
+        - If present: pathway_mode = "configured" (Pathway 2)
+        - If absent: pathway_mode = "workbench" (Pathway 1)
+      - Run `which ck` via Bash to check if ck CLI is installed
+      - If installed, run `ck --status` to verify index readiness
+      - On ck failure: warn the user and continue (graceful degradation)
+      - Store resolved pathway_mode and ck_available for all downstream agent prompts
 
 2. **Read the plan completely** from the plan document content. Check for any execution notes document from a prior partial run (title starts with `"Execution Notes:"`). If one exists, read it to understand what was already completed — trust completed phases and pick up from the first incomplete item.
 
 3. **Consider the steps involved in the plan.** Think deeply about how the pieces fit together and derive a detailed todo list from the plan's phases and requirements.
 
 4. **Implement each phase sequentially**, adapting to what you find while following the plan's intent.
+   - Consider pathway context when determining which files to modify and how to search for relevant code
 
 5. **Verify each phase** using the success criteria checks (usually `bun run check` covers everything). Fix any issues before proceeding.
 
