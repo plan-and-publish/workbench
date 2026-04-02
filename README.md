@@ -1,20 +1,27 @@
 # workbench
 
-- This repository will be used as a generic workbench for development and maintaining of different projects code and documentation.
+[![CI](https://github.com/plan-and-publish/workbench/actions/workflows/ci-workbench-cli.yml/badge.svg)](https://github.com/plan-and-publish/workbench/actions/workflows/ci-workbench-cli.yml)
+[![npm](https://img.shields.io/npm/v/@pap.dev/workbench)](https://www.npmjs.com/package/@pap.dev/workbench)
+[![JSR](https://jsr.io/badges/@pap/workbench)](https://jsr.io/@pap/workbench)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Folder Structure
+A generic development workbench for setting up and maintaining multiple projects from a single repository. Built and used internally by [PAP](https://pap.dev) — a no-code mobile building platform — and open for community use.
 
-- 'resources' folder contains mostly documentation and information.
-- 'projects' folder continas source codes that an engineer will pull to work on
-- 'scrips' contains helper codes that facilitate certain activities to give easier access to manage the codebase
+The repository acts as a hub: engineers fork it, configure their code and resource repositories as submodules, and get a consistent environment across the team.
 
-## MCP
+## Folder structure
 
-### Linear Authentication
+| Folder | Purpose |
+|--------|---------|
+| `packages/workbench-cli/` | The `workbench` CLI tool (TypeScript, Bun) |
+| `projects/` | Git submodules for code repositories |
+| `resources/` | Git submodules for documentation/resource repositories |
+| `scripts/` | Helper scripts for managing the codebase |
+| `thoughts/` | Planning notes, research, and ticket documentation (Not checked in) |
 
-Linear is a project management tool that is used to track the progress of projects. It is used to manage the tasks, issues, and other information related to the projects.
+## MCP — Linear
 
-To authenticate the Linear MCP (defined in [.opencode/opencode.json](.opencode/opencode.json)), run the following command for interactive authentication:
+[Linear](https://linear.app) is used for project management. To authenticate the Linear MCP (defined in [.opencode/opencode.json](.opencode/opencode.json)), run:
 
 ```bash
 opencode mcp auth linear
@@ -22,7 +29,7 @@ opencode mcp auth linear
 
 ## workbench CLI
 
-The `workbench` CLI provides a terminal UI for initialising the workbench repository.
+The `workbench` CLI provides a terminal UI for initializing a workbench repository — forking, cloning, and wiring up submodules interactively or non-interactively.
 
 ### Prerequisites
 
@@ -37,13 +44,7 @@ bun install
 bun link
 ```
 
-### Run (without installing)
-
-```bash
-bun run packages/workbench-cli/src/index.ts
-```
-
-### Quick Start
+### Quick start
 
 **Interactive init** — fork, clone, and set up in one flow:
 
@@ -51,7 +52,7 @@ bun run packages/workbench-cli/src/index.ts
 workbench --init
 ```
 
-**Non-interactive init** — create with defaults:
+**Non-interactive init:**
 
 ```bash
 workbench --init --no-tui --name my-project
@@ -63,22 +64,73 @@ workbench --init --no-tui --name my-project
 workbench --init --no-tui --name my-project --org myorg --code-repository https://github.com/myorg/api
 ```
 
-**Manual alternative** — fork/clone the repo yourself, then:
+**Already have a workbench repo cloned?**
 
 ```bash
 workbench --tui
 ```
 
-### Usage
+See [packages/workbench-cli/README.md](packages/workbench-cli/README.md) for the full flag reference and examples.
 
-Run `workbench` from the workbench repository root. Select `init` to walk through:
+## Working on issues with OpenCode
 
-1. Select GitHub org or personal account
-2. Select code repositories (submodules under `projects/`)
-3. Select resource repositories (submodules under `resources/`)
-4. Configure branch per repository
-5. Optionally index with `ck`
+Once your workbench is set up, the primary way to work on issues is through [OpenCode](https://opencode.ai/) using the built-in slash commands. These commands implement a structured flow from issue analysis through to review.
 
-After init, `.workbench/config.yaml` is written with the selected configuration.
+### Prerequisites
 
-See [packages/workbench-cli/README.md](packages/workbench-cli/README.md) for full documentation.
+- [OpenCode](https://opencode.ai/) installed
+- Linear MCP authenticated (see [MCP — Linear](#mcp--linear) above)
+
+### The development flow
+
+```
+/ticket → /research → /plan → /execute → /commit → /review
+```
+
+Each command takes a Linear issue ID as its argument and is best run in a fresh OpenCode session:
+
+| Command | What it does |
+|---------|-------------|
+| `/ticket {issue-id}` | Analyses the Linear issue and structures it for development |
+| `/research {issue-id}` | Researches the codebase in context of the issue |
+| `/plan {issue-id}` | Creates a detailed implementation plan |
+| `/execute {issue-id}` | Implements the plan |
+| `/commit` | Commits the changes in atomic commits, ready for review |
+| `/review {issue-id}` | Reviews the execution against the plan |
+
+### Example
+
+```bash
+# Start a new OpenCode session, then:
+/ticket PAP-1234
+# Read the output, open a new session
+/research PAP-1234
+# Open a new session
+/plan PAP-1234
+# Open a new session
+/execute PAP-1234
+# Once done:
+/commit
+# Open a new session
+/review PAP-1234
+```
+
+The commands are defined in [`.opencode/command/`](.opencode/command/) and can be customised for your own workflow.
+
+## Code indexing with ck
+
+The setup wizard optionally indexes your repositories with [ck](https://beaconbay.github.io/ck/) — a hybrid code search tool by [BeaconBay](https://github.com/beaconbay) that fuses lexical (BM25/grep) precision with embedding-based recall, so you can find the right code even when the exact keywords aren't there.
+
+## Acknowledgements
+
+workbench is inspired by [Cluster444/agentic](https://github.com/Cluster444/agentic), which pioneered the idea of a structured agentic development workflow using slash commands.
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, the development workflow, and how to submit a PR.
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
