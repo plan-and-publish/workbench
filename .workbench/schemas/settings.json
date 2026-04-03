@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Workbench Settings",
+  "description": "Configuration for workbench project management and tooling",
+  "type": "object",
+  "properties": {
+    "project_management": {
+      "description": "The project management tool to use for issue tracking and workflow management",
+      "type": "string",
+      "enum": ["linear"]
+    }
+  },
+  "required": ["project_management"],
+  "additionalProperties": false
+}

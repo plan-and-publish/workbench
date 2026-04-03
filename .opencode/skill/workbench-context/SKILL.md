@@ -26,6 +26,19 @@ This is a presence-only check. Do not parse or read `config.yaml`.
 2. If found, run `ck --status` to verify index readiness
 3. On any failure: warn the user and continue with grep/glob only (graceful degradation — never block execution)
 
+## Project Management Configuration
+
+When the command involves project management operations (retrieving issues, updating statuses, creating documents, commit trailers), configure the PM tool:
+
+1. Read `.workbench/settings.yml` to determine the configured project management tool
+2. If the file is missing or the `project_management` field is absent, stop with error:
+   > "No project management tool configured. Add `project_management: <tool>` to `.workbench/settings.yml`"
+3. The field value is the name of the PM skill to load
+4. Load the corresponding PM skill: `skill({ name: '<value>' })`
+5. The PM skill provides tool mappings, protocols, and workflow patterns for all PM operations
+
+If the command does not involve project management operations, skip this step.
+
 ## Context Passing Format
 
 After detecting pathway and checking ck availability, include the appropriate context block in every spawned agent's prompt.

@@ -1,5 +1,5 @@
 ---
-description: Execute an implementation plan from a Linear issue. Provide a Linear issue ID as the argument. Best run in a new session.
+description: Execute an implementation plan from an issue. Provide an issue ID as the argument. Best run in a new session.
 ---
 
 # Implement Plan
@@ -71,15 +71,15 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
 
 ## Steps
 
-1. **Check status-ticket label and fetch all context from Linear:**
-   - Call `linear_get_issue` with the provided issue ID
-   - Inspect the `labels[]` array. If the `status-ticket` group value is NOT `planned`, surface this to the user:
-     > "The status-ticket label is currently `{value}`, not `planned`. Execution is intended to run after planning. Do you want to proceed anyway?"
-   - Wait for explicit confirmation before continuing if the label is not `planned`
+1. **Check status and fetch all context:**
+   - Retrieve the issue using the provided issue ID
+   - If the status is not 'planned', surface this to the user:
+     > "The issue status is currently '{status}', not 'planned'. Execution is intended to run after planning. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the status is not 'planned'
    - Read the issue `description` field — this is the ticket content
-   - Fetch all documents linked to the issue:
-      - Call `linear_list_documents` with the issue ID to list documents associated with it
-      - For each document, call `linear_get_document` with the document `id` to retrieve its content
+   - Fetch all documents linked to the issue following the PM skill's document retrieval pattern:
+      - List all documents for the issue
+      - Retrieve each document's full content
    - **Identify the plan document** by finding the document whose `title` starts with `"Plan:"`.
       - If NO such document exists, **stop immediately** and inform the user:
         > "No plan document was found on issue {issue_id}. Cannot proceed with execution. Please run /plan first."
@@ -111,20 +111,14 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
    - Discoveries made during implementation
    - Decisions taken that differ from the plan
 
-   At the end of execution, create a Linear document for the execution notes:
-   - Call `linear_create_document` with:
-      - `issue`: the Linear issue ID
-      - `title`: `"Execution Notes: {issue_id}"`
-      - `content`: the full markdown content of the execution notes file
+   At the end of execution, create a document for the issue following the PM skill's document creation pattern:
+   - Title: `"Execution Notes: {issue_id}"`
+   - Content: the full markdown content of the execution notes file
 
 7. **Handle any mismatches or issues** by presenting them clearly and asking for guidance if needed.
 
-8. **Set status-ticket label to 'implemented':**
-   Using the label preservation protocol:
-   1. Call `linear_get_issue` to get the current `labels[]` array
-   2. Remove any existing `status-ticket` group value
-   3. Append `"implemented"` to the array
-   4. Call `linear_save_issue` with the full updated labels array
+8. **Set status to 'implemented':**
+   Update the status to 'implemented' following the status update protocol in the PM skill.
 
 Use the todowrite tool to create a structured task list for the 8 steps above, marking each as pending initially. Note that Step 3 may expand into multiple implementation subtasks derived from the plan.
 

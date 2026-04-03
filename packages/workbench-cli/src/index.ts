@@ -118,7 +118,7 @@ async function runNonInteractiveInit(args: CliArgs): Promise<void> {
     process.exit(1)
   }
 
-  if (existsSync(".workbench")) {
+  if (existsSync(".workbench/config.yaml")) {
     console.error(".workbench/ already exists")
     process.exit(1)
   }
@@ -211,7 +211,7 @@ async function runNonInteractiveInitCmd(args: CliArgs): Promise<void> {
     process.exit(0)
   }
 
-  if (existsSync(".workbench")) {
+  if (existsSync(".workbench/config.yaml")) {
     console.error(".workbench/ already exists")
     process.exit(1)
   }

@@ -1,5 +1,5 @@
 ---
-description: Creates a structured ticket for a Linear issue. Provide a Linear issue ID as the argument.
+description: Creates a structured ticket for an issue. Provide an issue ID as the argument.
 ---
 
 # Create Ticket
@@ -11,10 +11,10 @@ You create well-structured tickets that provide maximum context for downstream r
 
 ## Process Overview
 
-### Step 1: Read the Linear Issue
+### Step 1: Read the Issue
 
-1. Call `linear_get_issue` with the provided issue ID to fetch the issue title, description, and current labels.
-2. If the issue has a parent, call `linear_get_issue` on the parent ID to read the parent description for broader context. Do not duplicate parent-level content in the ticket — use it only to understand the wider scope.
+1. Retrieve the issue using the provided issue ID to fetch the issue title, description, and current labels.
+2. If the issue has a parent, retrieve the parent issue to read the parent description for broader context. Do not duplicate parent-level content in the ticket — use it only to understand the wider scope.
 3. Use the fetched content as the starting context for the Q&A. The existing issue description (if any) is the raw input from the user; treat it as prior context, not the final ticket.
 4. **Detect pathway context:**
    - Load the workbench-context skill: `skill({ name: 'workbench-context' })`
@@ -164,8 +164,7 @@ Once the Q&A and scope exploration are complete:
    - [ ] [Manual test step]
    ```
 
-2. **Overwrite the Linear issue description** with the full ticket content:
-   - Call `linear_save_issue` with `id: {issue_id}` and `description: {full ticket content}`
+2. **Overwrite the issue description** with the full ticket content following the PM skill's tool mapping.
 
 3. **Save a local convenience copy** to `thoughts/tickets/{issue_id}_{subject}.md` using the Write tool.
    This file must never be used as an input by any downstream command.
@@ -177,13 +176,9 @@ Before finalizing:
 3. **Confirm research hooks**: Verify keywords and patterns will be useful for research
 4. **Check scope**: Ensure the ticket is atomic and well-scoped
 
-### Step 7: Set status-ticket label to 'open'
+### Step 7: Set status to 'open'
 
-Using the label preservation protocol:
-1. Call `linear_get_issue` to get the current `labels[]` array
-2. Remove any existing `status-ticket` group value (open/researched/planned/implemented/reviewed)
-3. Append `"open"` to the array
-4. Call `linear_save_issue` with `labels: [<all preserved non-status labels>, "open"]`
+Update the status to 'open' following the status update protocol in the PM skill.
 
 Use the todowrite tool to create a structured task list for the 7 steps above, marking each as pending initially.
 
