@@ -1,22 +1,22 @@
 ---
-description: Research a Linear issue. Provide a Linear issue ID as the argument. Best run in a new session.
+description: Research an issue. Provide an issue ID as the argument. Best run in a new session.
 ---
 
 # Research Codebase
 
 You are tasked with conducting comprehensive research across the codebase to answer user questions by spawning tasks and synthesizing their findings.
 
-The user will provide a Linear issue ID. You will fetch the ticket from Linear and research the codebase accordingly.
+The user will provide an issue ID. You will fetch the ticket and research the codebase accordingly.
 
 ## Steps to follow after receiving the research query:
 
-1. **Check status-ticket label and fetch the ticket:**
-   - Call `linear_get_issue` with the provided issue ID
-   - Inspect the `labels[]` array. If the `status-ticket` group value is NOT `open`, surface this to the user:
-     > "The status-ticket label is currently `{value}`, not `open`. Research is intended to run after the ticket phase. Do you want to proceed anyway?"
-   - Wait for explicit confirmation before continuing if the label is not `open`
+1. **Check status and fetch the ticket:**
+   - Retrieve the issue using the provided issue ID
+   - If the status is not 'open', surface this to the user:
+     > "The issue status is currently '{status}', not 'open'. Research is intended to run after the ticket phase. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the status is not 'open'
    - Read the issue `description` field — this is the ticket content
-    - **IMPORTANT**: Do not read the ticket from any local file. The Linear issue description is the sole source of truth.
+    - **IMPORTANT**: Do not read the ticket from any local file. The issue description in the project management tool is the sole source of truth.
     - **Detect pathway context:**
       - Load the workbench-context skill: `skill({ name: 'workbench-context' })`
       - Check if `.workbench/config.yaml` exists in the repository root
@@ -90,7 +90,7 @@ Use the following metadata for the research document body:
 
 6. **Generate research document:**
    - Filename: `thoughts/research/{issue_id}_{topic}.md`
-     (e.g. `thoughts/research/PAP-7003_linear_integration.md`)
+     (e.g. `thoughts/research/PAP-7003_pm_integration.md`)
    - Write the local file using the Write tool
    - Structure WITHOUT YAML frontmatter — use a Metadata section in the body:
 
@@ -127,11 +127,9 @@ Use the following metadata for the research document body:
      [Areas needing further investigation]
      ```
 
-   - After writing the local file, **create a Linear document for the issue**:
-      - Call `linear_create_document` with:
-         - `issue`: the Linear issue ID
-         - `title`: `"Research: {issue_id} - {topic}"`
-         - `content`: the full markdown content of the research document
+   - After writing the local file, **create a document for the issue** following the PM skill's document creation pattern:
+      - Title: `"Research: {issue_id} - {topic}"`
+      - Content: the full markdown content of the research document
 
 7. **Present findings:**
    - Present a concise summary of findings to the user
@@ -142,16 +140,13 @@ Use the following metadata for the research document body:
    - If the user has follow-up questions, conduct additional research and produce a new document
    - Use a sequenced filename: `{issue_id}_{topic}_part2.md`, `_part3.md`, etc.
    - Write the new local file to `thoughts/research/`
-   - Create a new Linear document for the issue (never update existing documents):
-      - Call `linear_create_document` with `issue`, `title`: `"Research: {issue_id} - {topic} (part N)"`, and `content`
-   - Do NOT use any prior local research file as input — always fetch context from the Linear issue and its documents
+   - Create a new document for the issue (never update existing documents) following the PM skill's document creation pattern:
+      - Title: `"Research: {issue_id} - {topic} (part N)"`
+      - Content: the new research content
+   - Do NOT use any prior local research file as input — always fetch context from the issue and its documents
 
-9. **Set status-ticket label to 'researched':**
-   Using the label preservation protocol:
-   1. Call `linear_get_issue` to get the current `labels[]` array
-   2. Remove any existing `status-ticket` group value
-   3. Append `"researched"` to the array
-   4. Call `linear_save_issue` with the full updated labels array
+9. **Set status to 'researched':**
+   Update the status to 'researched' following the status update protocol in the PM skill.
 
 Use the todowrite tool to create a structured task list for the 9 steps above, marking each as pending initially.
 

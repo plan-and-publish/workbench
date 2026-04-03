@@ -1,5 +1,5 @@
 ---
-description: Create an implementation plan from a Linear issue. Provide a Linear issue ID as the argument. Best run in a new session.
+description: Create an implementation plan from an issue. Provide an issue ID as the argument. Best run in a new session.
 ---
 
 # Implementation Plan
@@ -10,17 +10,17 @@ You are tasked with creating detailed implementation plans through an interactiv
 
 ### Step 1: Context Gathering & Initial Analysis
 
-1. **Check status-ticket label and fetch all context from Linear:**
-   - Call `linear_get_issue` with the provided issue ID
-   - Inspect the `labels[]` array. If the `status-ticket` group value is NOT `researched`, surface this to the user:
-     > "The status-ticket label is currently `{value}`, not `researched`. Planning is intended to run after research. Do you want to proceed anyway?"
-   - Wait for explicit confirmation before continuing if the label is not `researched`
+1. **Check status and fetch all context:**
+   - Retrieve the issue using the provided issue ID
+   - If the status is not 'researched', surface this to the user:
+     > "The issue status is currently '{status}', not 'researched'. Planning is intended to run after research. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the status is not 'researched'
    - Read the issue `description` field — this is the ticket content
-   - Fetch all documents linked to the issue:
-      - Call `linear_list_documents` with the issue ID to list documents associated with it
-      - For each document, call `linear_get_document` with the document `id` to retrieve its content
+   - Fetch all documents linked to the issue following the PM skill's document retrieval pattern:
+      - List all documents for the issue
+      - Retrieve each document's full content
       - Treat all documents as context (research documents, prior artefacts)
-    - **IMPORTANT**: Do not read any local `thoughts/` files as inputs. Linear is the sole source of truth.
+    - **IMPORTANT**: Do not read any local `thoughts/` files as inputs. The project management tool is the sole source of truth.
     - **Detect pathway context:**
       - Load the workbench-context skill: `skill({ name: 'workbench-context' })`
       - Check if `.workbench/config.yaml` exists in the repository root
@@ -154,11 +154,9 @@ After structure approval:
 1. **Write the plan** to `thoughts/plans/{issue_id}_{descriptive_name}.md`
    (e.g. `thoughts/plans/PAP-7003_amend_agentic_commands.md`)
 
-   After writing the local file, **create a Linear document for the issue**:
-   - Call `linear_create_document` with:
-      - `issue`: the Linear issue ID
-      - `title`: `"Plan: {issue_id} - {descriptive_name}"`
-      - `content`: the full markdown content of the plan
+   After writing the local file, **create a document for the issue** following the PM skill's document creation pattern:
+   - Title: `"Plan: {issue_id} - {descriptive_name}"`
+   - Content: the full markdown content of the plan
 
    This file is a convenience copy only — downstream commands must not read it as input.
 
@@ -252,7 +250,7 @@ After structure approval:
 
 ## References
 
-- Linear issue: `{issue_id}` — https://linear.app/.../{issue_id}
+- Issue: `{issue_id}` — see the PM skill for issue URL format
 - Research document: see issue documents titled `"Research: {issue_id} - ..."`
 ```
 
@@ -278,13 +276,9 @@ After structure approval:
 
 4. **Continue refining** until the user is satisfied
 
-### Step 6: Set status-ticket label to 'planned'
+### Step 6: Set status to 'planned'
 
-Using the label preservation protocol:
-1. Call `linear_get_issue` to get the current `labels[]` array
-2. Remove any existing `status-ticket` group value
-3. Append `"planned"` to the array
-4. Call `linear_save_issue` with the full updated labels array
+Update the status to 'planned' following the status update protocol in the PM skill.
 
 Use the todowrite tool to create a structured task list for the 6 steps above, marking each as pending initially.
 

@@ -1,26 +1,26 @@
 ---
-description: Review the execution of a Linear issue's plan. Provide a Linear issue ID as the argument. Best run after execution is complete.
+description: Review the execution of an issue's plan. Provide an issue ID as the argument. Best run after execution is complete.
 ---
 
 # Review Plan
 
 You are tasked with validating that an implementation plan was correctly executed, verifying all success criteria and identifying any deviations or issues.
 
-You will be given a Linear issue ID. You will fetch the ticket, plan, and execution notes from Linear and validate that the implementation matches the plan.
+You will be given an issue ID. You will fetch the ticket, plan, and execution notes and validate that the implementation matches the plan.
 
 ## Validation Process
 
 ### Step 1: Context Discovery
 
-1. **Check status-ticket label and fetch all context from Linear:**
-   - Call `linear_get_issue` with the provided issue ID
-   - Inspect the `labels[]` array. If the `status-ticket` group value is NOT `implemented`, surface this to the user:
-     > "The status-ticket label is currently `{value}`, not `implemented`. Review is intended to run after execution. Do you want to proceed anyway?"
-   - Wait for explicit confirmation before continuing if the label is not `implemented`
+1. **Check status and fetch all context:**
+   - Retrieve the issue using the provided issue ID
+   - If the status is not 'implemented', surface this to the user:
+     > "The issue status is currently '{status}', not 'implemented'. Review is intended to run after execution. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the status is not 'implemented'
    - Read the issue `description` field — this is the ticket content
-   - Fetch all documents linked to the issue:
-      - Call `linear_list_documents` with the issue ID to list documents associated with it
-      - For each document, call `linear_get_document` with the document `id` to retrieve its content
+   - Fetch all documents linked to the issue following the PM skill's document retrieval pattern:
+      - List all documents for the issue
+      - Retrieve each document's full content
    - Identify key documents by their `title` prefix:
      - Plan: `title` starts with `"Plan:"`
      - Execution Notes: `title` starts with `"Execution Notes:"`
@@ -79,11 +79,9 @@ Create comprehensive validation summary and:
    (e.g. `thoughts/reviews/PAP-7003_amend_agentic_commands_review.md`)
    This is a convenience copy only — it must not be used as input by any command.
 
-   2. **Create a Linear document for the issue**:
-      - Call `linear_create_document` with:
-         - `issue`: the Linear issue ID
-         - `title`: `"Review: {issue_id} - {plan_name}"`
-         - `content`: the full markdown content of the review
+   2. **Create a document for the issue** following the PM skill's document creation pattern:
+      - Title: `"Review: {issue_id} - {plan_name}"`
+      - Content: the full markdown content of the review
 
 Use this report structure:
 
@@ -136,13 +134,9 @@ Use this report structure:
 - Document new API endpoints
 ```
 
-### Step 4: Set status-ticket label to 'reviewed'
+### Step 4: Set status to 'reviewed'
 
-Using the label preservation protocol:
-1. Call `linear_get_issue` to get the current `labels[]` array
-2. Remove any existing `status-ticket` group value
-3. Append `"reviewed"` to the array
-4. Call `linear_save_issue` with the full updated labels array
+Update the status to 'reviewed' following the status update protocol in the PM skill.
 
 Use the todowrite tool to create a structured task list for the 4 steps above, marking each as pending initially.
 

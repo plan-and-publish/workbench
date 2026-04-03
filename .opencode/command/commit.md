@@ -40,11 +40,13 @@ type: imperative title under 50 characters
 - Each bullet wrapped at 72 characters
 
 Delivers PAP-XXXX
+
+{commit trailer from PM skill}
 ```
 
 - **Title**: conventional prefix, imperative mood, capitalised, no trailing period, ≤50 characters
 - **Body**: 1-5 bullet points explaining why and what (omit body only for trivial changes)
-- **Trailer**: `Delivers {issue_id}` on the last line when an issue ID was found
+- **Trailer**: Use the commit trailer format defined in the PM skill on the last line when an issue ID was found
 - **Language**: English only
 
 ## Issue ID
@@ -53,8 +55,8 @@ Determine the associated issue ID in this order:
 
 1. **Session context** — If the session was invoked with an issue ID (e.g. /execute), use it
 2. **Branch name** — Run `git branch --show-current` and extract the `{PREFIX}-{NUMBER}` segment (e.g. `feature/pap-7024-desc` → `PAP-7024`). Normalise to uppercase.
-3. **Ask the user** — "Is there a Linear issue associated with these changes?"
-4. **Omit** — If no issue, proceed without the `Delivers` trailer
+3. **Ask the user** — "Is there an issue associated with these changes?"
+4. **Omit** — If no issue, proceed without a commit trailer
 
 ## Process:
 
@@ -68,7 +70,7 @@ Determine the associated issue ID in this order:
    - Identify which files belong together
    - **Auto-detect the commit type** from the diff using the types above
    - Draft messages following the Commit Message Format template
-   - Include the `Delivers` trailer on the first commit only if an issue ID was resolved
+   - Include the commit trailer on the first commit only if an issue ID was resolved
 
 3. **Present your plan to the user:**
    - List the files you plan to add for each commit
@@ -85,4 +87,4 @@ Determine the associated issue ID in this order:
 - Group related changes into atomic commits
 - Titles: imperative mood, capitalised, no trailing period, English only
 - Bodies: explain *why*, not just *what*
-- Include the `Delivers` trailer on the first commit when an issue ID was found
+- Include the commit trailer on the first commit when an issue ID was found
