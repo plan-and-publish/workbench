@@ -10,7 +10,8 @@ export interface CliArgs {
   resourceBranch: string
   index: boolean
   init: boolean
-  noFork: boolean
+  source: string
+  remote: boolean
   name: string
   noTui: boolean
 }
@@ -27,7 +28,8 @@ export function parseCliArgs(): CliArgs {
       "resource-branch": { type: "string", default: "main" },
       index: { type: "string", default: "on" },
       init: { type: "boolean", default: false },
-      "no-fork": { type: "boolean", default: false },
+      source: { type: "string", default: "plan-and-publish/workbench" },
+      remote: { type: "boolean", default: false },
       name: { type: "string", default: "workbench" },
       "no-tui": { type: "boolean", default: false },
     },
@@ -45,7 +47,8 @@ export function parseCliArgs(): CliArgs {
     resourceBranch: values["resource-branch"] as string,
     index: values.index === "on",
     init: values.init,
-    noFork: values["no-fork"] as boolean,
+    source: values.source as string,
+    remote: values.remote as boolean,
     name: values.name as string,
     noTui: values["no-tui"] as boolean,
   }
@@ -62,9 +65,10 @@ USAGE:
   workbench --help
 
 OPTIONS:
-  --init                          Initialize a new workbench (fork & clone)
-  --name <name>                   Name for the fork and local folder (default: workbench)
-  --no-fork                       Clone without forking (read-only)
+  --init                          Initialize a new workbench (clone)
+  --name <name>                   Name for the local folder (default: workbench)
+  --source <repo>                 Source repository to clone from (default: plan-and-publish/workbench)
+  --remote                        Create a private GitHub repo and set as origin
   --no-tui                        Skip TUI, use defaults or provided values
   --org <name>                    GitHub organization name
   --code-repository <url>         Code repository URL (can be repeated)
@@ -78,8 +82,9 @@ OPTIONS:
 EXAMPLES:
   workbench --init
   workbench --init --no-tui --name my-project
-  workbench --init --no-tui --no-fork --name explore-wb
-  workbench --init --no-tui --name my-project --org myorg --code-repository https://github.com/myorg/api
+  workbench --init --no-tui --name my-project --source myorg/custom-wb
+  workbench --init --no-tui --name my-project --remote --org myorg
+  workbench --init --no-tui --name my-project --remote --org myorg --code-repository https://github.com/myorg/api
   workbench --org myorg --code-repository https://github.com/myorg/backend
   workbench --tui
 `)

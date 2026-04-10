@@ -5,7 +5,7 @@ import { dirname, join } from "node:path"
 import { checkAuth, checkRepoRoot, getCurrentUserLogin } from "./utils/gh.ts"
 import { showMainMenu } from "./screens/mainMenu.ts"
 import { runInitFlow, executeInit, type InitState, type InitProgress } from "./commands/init.ts"
-import { executeInitialise, validateInitialiseState, runInitialiseFlow, type InitialiseState } from "./commands/initialise.ts"
+import { executeInitialise, executeCreateRemote, validateInitialiseState, runInitialiseFlow, type InitialiseState } from "./commands/initialise.ts"
 import { parseCliArgs, printHelp, type CliArgs } from "./args.ts"
 import { buildRepoFromUrl } from "./utils/repo.ts"
 import type { Repo } from "./screens/repoSelect.ts"
@@ -171,12 +171,9 @@ async function runNonInteractiveInit(args: CliArgs): Promise<void> {
 }
 
 async function runNonInteractiveInitCmd(args: CliArgs): Promise<void> {
-  const targetOrg = args.org ?? (await getCurrentUserLogin())
   const state: InitialiseState = {
     name: args.name,
-    noFork: args.noFork,
-    targetOrg,
-    isPersonalAccount: !args.org,
+    source: args.source,
   }
 
   const validationError = validateInitialiseState(state)
@@ -204,9 +201,23 @@ async function runNonInteractiveInitCmd(args: CliArgs): Promise<void> {
     process.exit(1)
   }
 
+  if (args.remote) {
+    const targetOrg = args.org ?? (await getCurrentUserLogin())
+    const remoteResult = await executeCreateRemote(targetOrg, args.name, stdoutProgress)
+    if (!remoteResult.success) {
+      console.error(remoteResult.error || "Remote creation failed")
+      process.exit(1)
+    }
+  }
+
   const hasRepos = args.codeRepositories.length > 0 || args.resourceRepositories.length > 0
   if (!hasRepos) {
-    console.log(`\nWorkbench initialised in ./${state.name}/`)
+    if (args.remote) {
+      console.log(`\nWorkbench initialised and remote configured in ./${state.name}/`)
+    } else {
+      console.log(`\nWorkbench initialised in ./${state.name}/`)
+      console.log("To add a remote: git remote add origin <url>")
+    }
     console.log("To set up your workbench, run: workbench --tui")
     process.exit(0)
   }
@@ -216,6 +227,7 @@ async function runNonInteractiveInitCmd(args: CliArgs): Promise<void> {
     process.exit(1)
   }
 
+  const targetOrg = args.org ?? (await getCurrentUserLogin())
   const codeRepos: Repo[] = args.codeRepositories.map((url) =>
     buildRepoFromUrl(url, args.codeBranch)
   )
