@@ -16,7 +16,8 @@ const SCREEN_ID = "init-org-select-screen"
 export async function showInitOrgSelect(
   renderer: CliRenderer,
   preselectedOrg: string | undefined,
-  onSelect: (orgLogin: string, isPersonalAccount: boolean) => void
+  title: string,
+  onSelect: (orgLogin: string) => void
 ): Promise<void> {
   const existing = renderer.root.getRenderable(SCREEN_ID)
   if (existing) {
@@ -48,12 +49,12 @@ export async function showInitOrgSelect(
   }
   spinner.stop()
 
-  const title = new TextRenderable(renderer, {
+  const titleText = new TextRenderable(renderer, {
     id: "init-org-title",
-    content: "Select Fork Target",
+    content: title,
     fg: "#00FFFF",
   })
-  container.add(title)
+  container.add(titleText)
 
   const hint = new TextRenderable(renderer, {
     id: "init-org-hint",
@@ -117,9 +118,7 @@ export async function showInitOrgSelect(
     (_index: number, option: { value: string }) => {
       renderer.keyInput.off("keypress", keypressHandler)
       container.visible = false
-      const selectedOrg = orgs.find((o) => o.login === option.value)
-      const isPersonalAccount = selectedOrg?.description === "Personal account"
-      onSelect(option.value, isPersonalAccount)
+      onSelect(option.value)
     }
   )
 

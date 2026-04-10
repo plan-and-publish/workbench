@@ -2,7 +2,6 @@ import { execSync, execFile } from "child_process"
 import { promisify } from "util"
 import { existsSync } from "fs"
 import { join } from "path"
-import { runCommand, type LineHandler } from "./spawn.ts"
 
 const execFileAsync = promisify(execFile)
 
@@ -78,22 +77,16 @@ export async function repoExists(owner: string, repo: string): Promise<boolean> 
   }
 }
 
-export async function forkRepo(
-  sourceRepo: string,
-  targetOrg: string | undefined,
-  forkName: string,
-  onLine: LineHandler
-): Promise<void> {
-  const args = [
-    "repo", "fork", sourceRepo,
-    "--fork-name", forkName,
-    "--clone",
-    "--default-branch-only",
-  ]
-  if (targetOrg !== undefined) {
-    args.push("--org", targetOrg)
-  }
-  await runCommand("gh", args, onLine)
+export async function createRepo(
+  org: string,
+  name: string
+): Promise<string> {
+  const { stdout } = await execFileAsync(
+    "gh",
+    ["repo", "create", `${org}/${name}`, "--private"],
+    { encoding: "utf8" }
+  )
+  return stdout.trim()
 }
 
 export async function getCurrentUserLogin(): Promise<string> {

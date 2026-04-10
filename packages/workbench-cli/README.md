@@ -5,7 +5,7 @@
 [![JSR](https://jsr.io/badges/@pap/workbench)](https://jsr.io/@pap/workbench)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
 
-A terminal UI for initializing a workbench repository — fork, clone, and wire up git submodules interactively or non-interactively.
+A terminal UI for initializing a workbench repository — clone and wire up git submodules interactively or non-interactively.
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ bun run src/index.ts
 workbench --init
 ```
 
-Launches an interactive flow: select a fork target (org or personal account), name your workbench, fork and clone the template repo, then optionally run the setup wizard.
+Launches an interactive flow: enter source repository and name, clone the template repo, optionally create a private remote, then optionally run the setup wizard.
 
 ### Non-interactive
 
@@ -62,9 +62,10 @@ workbench --tui
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--init` | Initialize a new workbench (fork & clone) | `false` |
-| `--name <name>` | Name for the fork and local folder | `workbench` |
-| `--no-fork` | Clone without forking (read-only) | `false` |
+| `--init` | Initialize a new workbench (clone) | `false` |
+| `--name <name>` | Name for the local folder | `workbench` |
+| `--source <repo>` | Source repository to clone from | `plan-and-publish/workbench` |
+| `--remote` | Create a private GitHub repo and set as origin | `false` |
 | `--no-tui` | Skip TUI, use defaults or provided values | `false` |
 
 ## Setup flags
@@ -92,11 +93,14 @@ workbench --init
 # Non-interactive init with custom name
 workbench --init --no-tui --name my-project
 
-# Clone without forking (read-only)
-workbench --init --no-tui --no-fork --name explore-wb
+# Clone from a custom source
+workbench --init --no-tui --name my-project --source myorg/custom-workbench
 
-# Init + setup in one command
-workbench --init --no-tui --name my-project --org myorg --code-repository https://github.com/myorg/api
+# Create a private remote repository
+workbench --init --no-tui --name my-project --remote --org myorg
+
+# Init + remote + setup in one command
+workbench --init --no-tui --name my-project --remote --org myorg --code-repository https://github.com/myorg/api
 
 # Standalone setup (existing repo)
 workbench --org myorg --code-repository https://github.com/myorg/backend
@@ -109,7 +113,7 @@ workbench --tui
 
 Running init walks through:
 
-1. Select a GitHub organization or personal account.
+1. Enter source repository and name.
 2. Select code repositories — added as submodules under `projects/`.
 3. Select resource repositories — added as submodules under `resources/`.
 4. Configure the target branch per repository.
@@ -121,8 +125,8 @@ Afterwards, `.workbench/config.yaml` is written with the selected configuration.
 
 | Error | Cause | Resolution |
 |-------|-------|------------|
-| `A repository named "X" already exists under Y` | Fork name conflict | Choose a different `--name` |
 | `A folder named "X" already exists in the current directory` | Local folder conflict | Remove or rename the folder, or choose a different name |
+| `Remote creation failed` | `gh repo create` failed | Check `gh auth login` and org permissions |
 | `gh CLI is not authenticated` | `gh auth` not set up | Run `gh auth login` |
 | `Invalid name "X"` | Bad characters in name | Use only alphanumeric, `-`, `.`, `_` |
 
