@@ -5,3 +5,4 @@ package-lock.json
 thoughts/
 node_modules
 dist/
+packages/.ck/
