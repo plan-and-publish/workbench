@@ -53,7 +53,22 @@ For each step, the orchestrator must:
    - `success` - command completed without unresolved blockers
    - `blocked` - command asked a blocking/critical question that needs escalation
    - `failed` - command errored or could not complete
-9. Announce step completion state.
+9. Treat each `opencode run` invocation as one attempt for the step; attempt index starts at `1` and increments for each invocation, including `--session` continuations.
+10. Measure active runtime per attempt from immediately before invocation to command return; do not include human wait time.
+11. Extract `cost` from JSON output when present; if missing, record `N/A` and never coerce to `0`.
+12. Include all attempts in per-step and workflow aggregates, including failed and retried attempts.
+13. Preserve raw numeric precision for cost values when available.
+14. Apply strict missing-cost aggregation:
+
+```text
+if any attempt cost is missing:
+  Total Cost = N/A
+  Known Cost Subtotal = sum(numeric attempt costs)
+else:
+  Total Cost = sum(all attempt costs)
+```
+
+15. Announce step completion state.
 
 ## Question Handling Policy
 
@@ -94,7 +109,14 @@ A successful orchestrator run includes:
 
 - All required remaining commands ran in order from computed start point
 - Per-step status updates were shown
-- Final summary includes attempted steps, outcomes, escalations, notable artifacts, and per-step session IDs when available
+- Final summary includes `Report Version: v1`
+- Final summary includes `Report Status: Complete|Partial`
+- Partial runs include `Final Stop Reason: <reason>`
+- Final summary includes per-attempt rows (step, attempt index, outcome, active runtime, cost, reason, session metadata)
+- Final summary includes per-step aggregates (active runtime, strict cost totals, outcome counts)
+- Final summary includes workflow totals (total active runtime and strict total cost fields)
+- A new Linear document is created on every run with title `Implementation Report: <ISSUE_ID> - YYYY-MM-DDTHH-MM-SSZ`
+- Document content is the full human-readable markdown implementation report
 
 ## Maintenance Guidance
 

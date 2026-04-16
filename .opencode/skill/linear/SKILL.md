@@ -84,6 +84,7 @@ Document identification by title prefix:
 - `"Research:"` — research documents
 - `"Plan:"` — implementation plans
 - `"Execution Notes:"` — execution notes
+- `"Implementation Report:"` — orchestrator implementation report artifacts
 - `"Review:"` — review documents
 
 ## Issue References

@@ -89,6 +89,8 @@ Once your workbench is set up, the primary way to work on issues is through [Ope
 
 `/implement` is the end-to-end orchestrator. It resumes from the issue's
 current `status-ticket` label and runs the remaining commands automatically.
+Each `/implement` run also creates a new Linear document artifact titled
+`Implementation Report: <ISSUE_ID> - YYYY-MM-DDTHH-MM-SSZ`.
 
 Manual flow remains available:
 
