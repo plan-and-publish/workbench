@@ -28,5 +28,17 @@
                 "ck_hybrid_search": true
             }
         }
+    },
+    "provider": {
+        "openai":{
+            "options" :{
+                "timeout": 1800000
+            }
+        },
+        "zai-coding-plan": {
+            "options": {
+                "timeout": 1800000
+            }
+        }
     }
 }
