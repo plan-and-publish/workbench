@@ -104,7 +104,7 @@ Each command takes a Linear issue ID as its argument and is best run in a fresh 
 | `/research {issue-id}` | Researches the codebase in context of the issue |
 | `/plan {issue-id}` | Creates a detailed implementation plan |
 | `/execute {issue-id}` | Implements the plan |
-| `/implement {issue-id}` | Orchestrates all remaining workflow steps |
+| `/implement {issue-id} [ticket\|research\|plan\|execute\|review\|commit]` | Orchestrates all remaining workflow steps, optionally bounded to a stop-step |
 | `/commit` | Commits the changes in atomic commits, ready for review |
 | `/review {issue-id}` | Reviews the execution against the plan |
 
@@ -121,7 +121,13 @@ Each command takes a Linear issue ID as its argument and is best run in a fresh 
 
 # Orchestrated flow
 /implement PAP-1234
+
+# Orchestrated flow with optional stop-step bound
+/implement PAP-1234 ReSeArCh
 ```
+
+`/implement` accepts an optional stop-step (`ticket|research|plan|execute|review|commit`).
+Input is case-insensitive, normalized to lowercase, and must not be earlier than the issue's current status progression.
 
 The commands are defined in [`.opencode/command/`](.opencode/command/) and can be customised for your own workflow.
 
