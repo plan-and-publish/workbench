@@ -84,7 +84,18 @@ Once your workbench is set up, the primary way to work on issues is through [Ope
 ### The development flow
 
 ```
-/ticket → /research → /plan → /execute → /commit → /review
+/implement
+```
+
+`/implement` is the end-to-end orchestrator. It resumes from the issue's
+current `status-ticket` label and runs the remaining commands automatically.
+Each `/implement` run also creates a new Linear document artifact titled
+`Implementation Report: <ISSUE_ID> - YYYY-MM-DDTHH-MM-SSZ`.
+
+Manual flow remains available:
+
+```
+/ticket → /research → /plan → /execute → /review → /commit
 ```
 
 Each command takes a Linear issue ID as its argument and is best run in a fresh OpenCode session:
@@ -95,25 +106,30 @@ Each command takes a Linear issue ID as its argument and is best run in a fresh 
 | `/research {issue-id}` | Researches the codebase in context of the issue |
 | `/plan {issue-id}` | Creates a detailed implementation plan |
 | `/execute {issue-id}` | Implements the plan |
+| `/implement {issue-id} [ticket\|research\|plan\|execute\|review\|commit]` | Orchestrates all remaining workflow steps, optionally bounded to a stop-step |
 | `/commit` | Commits the changes in atomic commits, ready for review |
 | `/review {issue-id}` | Reviews the execution against the plan |
 
 ### Example
 
 ```bash
-# Start a new OpenCode session, then:
+# Manual flow
 /ticket PAP-1234
-# Read the output, open a new session
 /research PAP-1234
-# Open a new session
 /plan PAP-1234
-# Open a new session
 /execute PAP-1234
-# Once done:
-/commit
-# Open a new session
 /review PAP-1234
+/commit
+
+# Orchestrated flow
+/implement PAP-1234
+
+# Orchestrated flow with optional stop-step bound
+/implement PAP-1234 ReSeArCh
 ```
+
+`/implement` accepts an optional stop-step (`ticket|research|plan|execute|review|commit`).
+Input is case-insensitive, normalized to lowercase, and must not be earlier than the issue's current status progression.
 
 The commands are defined in [`.opencode/command/`](.opencode/command/) and can be customised for your own workflow.
 

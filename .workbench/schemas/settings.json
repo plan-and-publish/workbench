@@ -8,6 +8,84 @@
       "description": "The project management tool to use for issue tracking and workflow management",
       "type": "string",
       "enum": ["linear"]
+    },
+    "orchestrator": {
+      "description": "Settings for workflow orchestration behavior",
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "description": "Default strategy used when answering non-critical sub-command questions",
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "default": "minimum-changes-expandability"
+            },
+            "principles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "default": [
+                "minimum changes",
+                "maximum expandability",
+                "do not deliver what is not needed"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "default": {
+            "name": "minimum-changes-expandability",
+            "principles": [
+              "minimum changes",
+              "maximum expandability",
+              "do not deliver what is not needed"
+            ]
+          }
+        },
+        "escalation": {
+          "description": "Controls when the orchestrator escalates questions to the user",
+          "type": "object",
+          "properties": {
+            "escalate_on_blocking": {
+              "type": "boolean",
+              "default": true
+            },
+            "escalate_on_critical": {
+              "type": "boolean",
+              "default": true
+            },
+            "max_auto_answers_per_step": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 2
+            }
+          },
+          "additionalProperties": false,
+          "default": {
+            "escalate_on_blocking": true,
+            "escalate_on_critical": true,
+            "max_auto_answers_per_step": 2
+          }
+        }
+      },
+      "additionalProperties": false,
+      "default": {
+        "strategy": {
+          "name": "minimum-changes-expandability",
+          "principles": [
+            "minimum changes",
+            "maximum expandability",
+            "do not deliver what is not needed"
+          ]
+        },
+        "escalation": {
+          "escalate_on_blocking": true,
+          "escalate_on_critical": true,
+          "max_auto_answers_per_step": 2
+        }
+      }
     }
   },
   "required": ["project_management"],
