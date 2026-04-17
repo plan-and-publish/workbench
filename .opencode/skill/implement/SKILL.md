@@ -1,3 +1,7 @@
+---
+name: implement
+description: Defines the workflow sequence and resume rules for the /implement orchestrator command.
+---
 # Skill: implement
 
 # Implement Workflow Skill
