@@ -42,11 +42,24 @@ You run the next required command based on issue status, resume from partial pro
    - Default strategy intent: minimum changes, maximum expandability, do not deliver what is not needed.
 
 4. **Compute start point from current status and apply stop-step boundary checks**
-   - Determine the current `status-ticket` label value.
-   - Use the implement skill mapping to determine the next command.
-   - If status is unknown, present the mismatch and ask the user how to proceed.
-   - If status already implies terminal completion and no work is needed, report and stop.
-   - If `stop_step` is provided, compare it to current progression before running any sub-command.
+    - Determine the current `status-ticket` label value.
+    - Use the implement skill mapping to determine the next command.
+    - Validate `status-ticket` state before dispatch:
+      - no `status-ticket` value (`none`) is valid start state
+      - exactly one canonical value is valid: `open`, `researched`, `planned`, `implemented`, `reviewed`
+      - multiple or invalid values are malformed and must hard-stop before any step dispatch
+    - If malformed, fail immediately with:
+
+```text
+Status-ticket validation failed
+- Found: <values>
+- Allowed: open, researched, planned, implemented, reviewed
+- Reason: multiple values | invalid value
+- Remediation: keep exactly one allowed value, or remove all to reset to start state
+```
+
+    - If status already implies terminal completion and no work is needed, report and stop.
+    - If `stop_step` is provided, compare it to current progression before running any sub-command.
    - If requested `stop_step` is earlier than current progression, fail fast with:
 
 ```text
@@ -60,8 +73,8 @@ Stop-step validation failed
    - If `stop_step` is valid and not earlier than current progression, execute only through that step.
 
 5. **Execute remaining workflow sequentially**
-   - For each remaining command from the computed start point (bounded by optional `stop_step`):
-      - Announce: command name, position in workflow, and current issue status.
+    - For each remaining command from the computed start point (bounded by optional `stop_step`):
+      - Announce: command name, position in workflow, and current `status-ticket` label state.
       - Run in a fresh session via Bash with JSON output:
         - `opencode run --format json --command "<command>" "<issue_id>"`
       - Capture machine-readable JSON events and exit status.

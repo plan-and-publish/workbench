@@ -14,9 +14,9 @@ You will be given an issue ID. You will fetch the ticket, plan, and execution no
 
 1. **Check status and fetch all context:**
    - Retrieve the issue using the provided issue ID
-   - If the status is not 'implemented', surface this to the user:
-     > "The issue status is currently '{status}', not 'implemented'. Review is intended to run after execution. Do you want to proceed anyway?"
-   - Wait for explicit confirmation before continuing if the status is not 'implemented'
+   - If the `status-ticket` label is not 'implemented', surface this to the user:
+     > "The `status-ticket` label is currently '{status}', not 'implemented'. Review is intended to run after execution. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the `status-ticket` label is not 'implemented'
    - Read the issue `description` field — this is the ticket content
    - Fetch all documents linked to the issue following the PM skill's document retrieval pattern:
       - List all documents for the issue

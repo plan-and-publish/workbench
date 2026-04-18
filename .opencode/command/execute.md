@@ -73,9 +73,9 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
 
 1. **Check status and fetch all context:**
    - Retrieve the issue using the provided issue ID
-   - If the status is not 'planned', surface this to the user:
-     > "The issue status is currently '{status}', not 'planned'. Execution is intended to run after planning. Do you want to proceed anyway?"
-   - Wait for explicit confirmation before continuing if the status is not 'planned'
+   - If the `status-ticket` label is not 'planned', surface this to the user:
+     > "The `status-ticket` label is currently '{status}', not 'planned'. Execution is intended to run after planning. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the `status-ticket` label is not 'planned'
    - Read the issue `description` field — this is the ticket content
    - Fetch all documents linked to the issue following the PM skill's document retrieval pattern:
       - List all documents for the issue

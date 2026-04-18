@@ -39,7 +39,10 @@ Use the issue's `status-ticket` label to decide where to start.
 ### Notes
 
 - `commit` is terminal for this orchestrator flow.
-- Unknown status values must stop execution and require user input.
+- `status-ticket` state must be validated before dispatch:
+  - `none` (no `status-ticket`) is valid and maps to `ticket`
+  - exactly one canonical value is valid: `open`, `researched`, `planned`, `implemented`, `reviewed`
+  - multiple values or invalid values are malformed and must hard-stop before dispatch
 - Non-status labels must always be preserved by sub-commands that update status.
 
 ## Run Contract Per Step
@@ -101,7 +104,7 @@ Stop immediately when any of the following occurs:
 
 - A sub-command returns `failed`
 - A blocking question is escalated and cannot be resolved
-- The status label is unknown and the user does not provide direction
+- `status-ticket` validation fails (multiple values or invalid value)
 - Stop-step validation fails because requested step is earlier than current progression
 - A parser error or protocol error occurs
 

@@ -12,9 +12,9 @@ You are tasked with creating detailed implementation plans through an interactiv
 
 1. **Check status and fetch all context:**
    - Retrieve the issue using the provided issue ID
-   - If the status is not 'researched', surface this to the user:
-     > "The issue status is currently '{status}', not 'researched'. Planning is intended to run after research. Do you want to proceed anyway?"
-   - Wait for explicit confirmation before continuing if the status is not 'researched'
+   - If the `status-ticket` label is not 'researched', surface this to the user:
+     > "The `status-ticket` label is currently '{status}', not 'researched'. Planning is intended to run after research. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the `status-ticket` label is not 'researched'
    - Read the issue `description` field — this is the ticket content
    - Fetch all documents linked to the issue following the PM skill's document retrieval pattern:
       - List all documents for the issue
