@@ -12,9 +12,9 @@ The user will provide an issue ID. You will fetch the ticket and research the co
 
 1. **Check status and fetch the ticket:**
    - Retrieve the issue using the provided issue ID
-   - If the status is not 'open', surface this to the user:
-     > "The issue status is currently '{status}', not 'open'. Research is intended to run after the ticket phase. Do you want to proceed anyway?"
-   - Wait for explicit confirmation before continuing if the status is not 'open'
+   - If the `status-ticket` label is not 'open', surface this to the user:
+     > "The `status-ticket` label is currently '{status}', not 'open'. Research is intended to run after the ticket phase. Do you want to proceed anyway?"
+   - Wait for explicit confirmation before continuing if the `status-ticket` label is not 'open'
    - Read the issue `description` field — this is the ticket content
     - **IMPORTANT**: Do not read the ticket from any local file. The issue description in the project management tool is the sole source of truth.
     - **Detect pathway context:**

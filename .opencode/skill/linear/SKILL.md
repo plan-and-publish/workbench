@@ -42,19 +42,47 @@ These values correspond to the `status-ticket` label group in Linear.
 Before performing a workflow operation, verify the issue has the expected status:
 
 1. Retrieve the issue using the issue ID
-2. Inspect the `labels[]` array for the `status-ticket` group value
-3. If the status does not match the expected value, surface a warning:
-   > "The issue status is currently `{status}`, not `{expected}`. {Operation} is intended to run after {previous step}. Do you want to proceed anyway?"
-4. Wait for explicit confirmation before continuing if the status is not as expected
+2. Inspect the `labels[]` array for the `status-ticket` group value and validate state:
+   - no `status-ticket` value (`none`) is valid start state
+   - exactly one canonical value is valid: `open`, `researched`, `planned`, `implemented`, `reviewed`
+   - multiple `status-ticket` values are invalid and must stop immediately
+   - any non-canonical `status-ticket` value is invalid and must stop immediately
+3. If validation fails, stop immediately with:
+
+```text
+Status-ticket validation failed
+- Found: <values>
+- Allowed: open, researched, planned, implemented, reviewed
+- Reason: multiple values | invalid value
+- Remediation: keep exactly one allowed value, or remove all to reset to start state
+```
+
+4. If the `status-ticket` label value does not match the expected value (but is valid), surface a warning:
+   > "The `status-ticket` label is currently `{status}`, not `{expected}`. {Operation} is intended to run after {previous step}. Do you want to proceed anyway?"
+5. Wait for explicit confirmation before continuing if the status is valid-but-not-expected
 
 ### Label Preservation Protocol
 
 When updating the issue status:
 
 1. Retrieve the issue to get the current `labels[]` array
-2. Remove any existing `status-ticket` group value (`open`, `researched`, `planned`, `implemented`, `reviewed`)
-3. Append the new status value to the labels array
-4. Update the issue: `linear_save_issue({ id: "{issue_id}", labels: ["{preserved_label_1}", "{preserved_label_2}", "{new_status}"] })`
+2. Validate current `status-ticket` state using the same Status Guard model:
+   - `none` is valid
+   - one canonical value is valid
+   - multiple values or invalid values must stop immediately
+3. On malformed pre-state, fail immediately and do not call `linear_save_issue`:
+
+```text
+Status-ticket validation failed
+- Found: <values>
+- Allowed: open, researched, planned, implemented, reviewed
+- Reason: multiple values | invalid value
+- Remediation: keep exactly one allowed value, or remove all to reset to start state
+```
+
+4. On valid pre-state, remove any existing `status-ticket` group value (`open`, `researched`, `planned`, `implemented`, `reviewed`)
+5. Append the new status value to the labels array
+6. Update the issue: `linear_save_issue({ id: "{issue_id}", labels: ["{preserved_label_1}", "{preserved_label_2}", "{new_status}"] })`
 
 **Example**: Issue has labels `["researched", "Improvement"]`. Setting status to `"planned"`:
 - Remove `"researched"` (current status)
