@@ -61,16 +61,43 @@ export async function executeClone(
   }
 }
 
-export async function executeRemoveOrigin(
+export async function executeCleanup(
   progress: InitProgress
 ): Promise<void> {
+  const { onLine } = progress
+  const targets = ["packages", ".github", "LICENSE", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md"]
+
+  onLine("--- Cleaning up CLI-specific files ---", true, false)
+  for (const target of targets) {
+    try {
+      await runCommand("rm", ["-rf", target], () => {})
+    } catch {}
+  }
+}
+
+export async function executeReinit(
+  progress: InitProgress
+): Promise<InitialiseResult> {
+  const { onLine } = progress
+
   try {
-    await runCommand("git", ["remote", "remove", "origin"], (line, _, isCR) =>
-      progress.onLine(line, false, isCR)
-    )
-    progress.onLine("Removed origin remote. To add a remote later: git remote add origin <url>", false, false)
-  } catch {
-    progress.onLine("No origin remote to remove (skipped)", false, false)
+    onLine("--- Reinitialising git repository ---", true, false)
+    await runCommand("rm", ["-rf", ".git"], () => {})
+    await runCommand("git", ["init", "-b", "main"], (line, _, isCR) => onLine(line, false, isCR))
+    await runCommand("git", ["add", "."], (line, _, isCR) => onLine(line, false, isCR))
+    await runCommand("git", ["commit", "-m", "Source Import"], (line, _, isCR) => onLine(line, false, isCR))
+
+    const statusOutput: string[] = []
+    await runCommand("git", ["status", "--porcelain"], (line) => {
+      statusOutput.push(line)
+    })
+    if (statusOutput.some((line) => line.trim().length > 0)) {
+      return { success: false, error: "Git working tree is not clean after reinitialisation" }
+    }
+
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: String(error) }
   }
 }
 
@@ -110,7 +137,13 @@ export async function executeInitialise(
     return result
   }
 
-  await executeRemoveOrigin(progress)
+  await executeCleanup(progress)
+
+  const reinitResult = await executeReinit(progress)
+  if (!reinitResult.success) {
+    return reinitResult
+  }
+
   return result
 }
 
