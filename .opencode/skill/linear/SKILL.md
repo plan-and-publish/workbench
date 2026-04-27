@@ -25,7 +25,7 @@ All project management operations use Linear MCP tools. This skill maps generic 
 | Update issue labels | `linear_save_issue({ id: "{issue_id}", labels: ["{label1}", "{label2}"] })` |
 | List documents for an issue | Retrieve the issue — the response includes an associated `documents` array with `id` and `title` for each |
 | Retrieve a document | `linear_get_document({ id: "{document_id}" })` |
-| Create a document | `linear_create_document({ issue: "{issue_id}", title: "{title}", content: "{content}" })` |
+| Create a document | `linear_save_document({ issue: "{issue_id}", title: "{title}", content: "{content}" })` |
 
 ## Status Management
 
@@ -94,10 +94,11 @@ Status-ticket validation failed
 
 ### Creating Documents
 
-Use `linear_create_document` with:
+Use `linear_save_document` with:
 - `issue`: the issue ID (e.g., `"PAP-7018"`)
 - `title`: the document title (e.g., `"Research: PAP-7018 - Topic Name"`)
 - `content`: the full Markdown content — use literal newlines and special characters, not escape sequences
+- Do not pass `id` when creating a document. `id` is only for updating an existing document.
 
 Rules:
 - Never update existing documents — always create new ones

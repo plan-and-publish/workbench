@@ -145,7 +145,7 @@ else:
       - Escalations asked to the user and their resolutions
       - Notable artifacts created (documents/commits) reported by sub-commands
       - Final stop reason (completed or first failure/blocker)
-      - Create a new Linear document on every orchestrator run using `linear_create_document`:
+      - Create a new Linear document on every orchestrator run using `linear_save_document` without `id`:
         - Title: `Implementation Report: <ISSUE_ID> - YYYY-MM-DDTHH-MM-SSZ`
         - Content: full markdown report generated from this summary
 
