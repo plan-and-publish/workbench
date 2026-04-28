@@ -4,172 +4,20 @@ description: Review the execution of an issue's plan. Provide an issue ID as the
 
 # Review Plan
 
-You are tasked with validating that an implementation plan was correctly executed, verifying all success criteria and identifying any deviations or issues.
+Thin wrapper that spawns the reviewer agent.
 
-You will be given an issue ID. You will fetch the ticket, plan, and execution notes and validate that the implementation matches the plan.
+## Instructions
 
-## Validation Process
-
-### Step 1: Context Discovery
-
-1. **Check status and fetch all context:**
-   - Retrieve the issue using the provided issue ID
-   - If the `status-ticket` label is not 'implemented', surface this to the user:
-     > "The `status-ticket` label is currently '{status}', not 'implemented'. Review is intended to run after execution. Do you want to proceed anyway?"
-   - Wait for explicit confirmation before continuing if the `status-ticket` label is not 'implemented'
-   - Read the issue `description` field — this is the ticket content
-   - Fetch all documents linked to the issue following the PM skill's document retrieval pattern:
-      - List all documents for the issue
-      - Retrieve each document's full content
-   - Identify key documents by their `title` prefix:
-     - Plan: `title` starts with `"Plan:"`
-     - Execution Notes: `title` starts with `"Execution Notes:"`
-     - Research: `title` starts with `"Research:"`
-   - Use the plan and execution notes as the primary review context. Research is supplementary.
-    - **IMPORTANT**: Do not read any local `thoughts/` files as inputs.
-    - **Detect pathway context:**
-      - Load the workbench-context skill: `skill({ name: 'workbench-context' })`
-      - Check if `.workbench/config.yaml` exists in the repository root
-        - If present: pathway_mode = "configured" (Pathway 2)
-        - If absent: pathway_mode = "workbench" (Pathway 1)
-      - Run `which ck` via Bash to check if ck CLI is installed
-      - If installed, run `ck --status` to verify index readiness
-      - On ck failure: warn the user and continue (graceful degradation)
-      - Store resolved pathway_mode and ck_available for all downstream agent prompts
-
-2. **Identify what should have changed**:
-   - List all files that should be modified according to the plan
-   - Note all success criteria (automated and manual)
-   - Identify key functionality to verify
-
-3. **Identify actual changes by examining the codebase:**
-    - Use the **codebase-locator** task to find all files related to the components that were supposed to change
-    - Use the **codebase-analyzer** task to understand what the implementation actually does
-    - **Include pathway context** when spawning codebase-locator and codebase-analyzer agents
-    - Compare actual implementation to plan specifications
-   - Return file-by-file comparison of planned vs actual
-
-### Step 2: Systematic Validation
-
-For each phase in the plan:
-
-1. **Check completion status**:
-   - Look for checkmarks in the plan (- [x])
-   - Verify the actual code matches claimed completion
-
-2. **Run automated verification**:
-   - Execute each command from "Automated Verification"
-   - Document pass/fail status
-   - If failures, investigate root cause
-
-3. **Assess manual criteria**:
-   - List what needs manual testing
-   - Provide clear steps for user verification
-
-4. **Think deeply about edge cases**:
-   - Were error conditions handled?
-   - Are there missing validations?
-   - Could the implementation break existing functionality?
-
-### Step 3: Generate Validation Report
-
-Create comprehensive validation summary and:
-
-1. **Write the local file** to `thoughts/reviews/{issue_id}_{plan_name}_review.md`
-   (e.g. `thoughts/reviews/PAP-7003_amend_agentic_commands_review.md`)
-   This is a convenience copy only — it must not be used as input by any command.
-
-   2. **Create a document for the issue** following the PM skill's document creation pattern:
-      - Title: `"Review: {issue_id} - {plan_name}"`
-      - Content: the full markdown content of the review
-
-Use this report structure:
-
-```markdown
-## Validation Report: [Plan Name]
-
-### Implementation Status
-✓ Phase 1: [Name] - Fully implemented
-✓ Phase 2: [Name] - Fully implemented
-⚠️ Phase 3: [Name] - Partially implemented (see issues)
-
-### Automated Verification Results
-✓ Build passes: `turbo build`
-✓ Tests pass: `turbo test`
-✗ Linting issues: `turbo check` (3 warnings)
-
-### Code Review Findings
-
-#### Matches Plan:
-- Database migration correctly adds [table]
-- API endpoints implement specified methods
-- Error handling follows plan
-
-#### Deviations from Plan:
-- Check the plan's "## Deviations" section (if present)
-- For each deviation noted:
-  - **Phase [N]**: [Original plan vs actual implementation]
-  - **Assessment**: [Is the deviation justified? Impact on success criteria?]
-  - **Recommendation**: [Any follow-up needed?]
-- Additional deviations found during review:
-  - Used different variable names in [file:line]
-  - Added extra validation in [file:line] (improvement)
-
-#### Potential Issues:
-- Missing index on foreign key could impact performance
-- No rollback handling in migration
-
-### Manual Testing Required:
-1. UI functionality:
-   - [ ] Verify [feature] appears correctly
-   - [ ] Test error states with invalid input
-
-2. Integration:
-   - [ ] Confirm works with existing [component]
-   - [ ] Check performance with large datasets
-
-### Recommendations:
-- Address linting warnings before merge
-- Consider adding integration test for [scenario]
-- Document new API endpoints
-```
-
-### Step 4: Set status to 'reviewed'
-
-Update the status to 'reviewed' following the status update protocol in the PM skill.
-
-Use the todowrite tool to create a structured task list for the 4 steps above, marking each as pending initially.
-
-## Working with Existing Context
-
-- Review the conversation history
-- Check your todo list for what was completed
-- Focus validation on work done in this session
-- Be honest about any shortcuts or incomplete items
-
-## Important Guidelines
-
-1. **Be thorough but practical** - Focus on what matters
-2. **Run all automated checks** - Don't skip verification commands
-3. **Document everything** - Both successes and issues
-4. **Think critically** - Question if the implementation truly solves the problem
-5. **Consider maintenance** - Will this be maintainable long-term?
-6. **Do not use task subagents** - All review work should be done exclusively in the main context to maintain consistency and avoid fragmentation
-
-## Validation Checklist
-
-Always verify:
-- [ ] All phases marked complete are actually done
-- [ ] Automated tests pass
-- [ ] Code follows existing patterns
-- [ ] No regressions introduced
-- [ ] Error handling is robust
-- [ ] Documentation updated if needed
-- [ ] Manual test steps are clear
-
-The validation works best after commits are made, as it can analyze the git history to understand what was implemented.
-
-Remember: Good validation catches issues before they reach production. Be constructive but thorough in identifying gaps or improvements.
+1. Parse the issue ID from `$ARGUMENTS`.
+2. Spawn the reviewer agent via the Task tool:
+   - `subagent_type`: `"reviewer"`
+   - `prompt`: `"Execute the review workflow for issue {issue_id}."`
+3. When the agent returns:
+   - If the output contains questions for the user, relay them exactly as presented.
+   - Collect the user's response.
+   - Resume the agent via the Task tool with `task_id` and the user's response.
+   - Repeat until the agent signals completion.
+4. Report the agent's final outcome to the user.
 
 **issue_id**
 
