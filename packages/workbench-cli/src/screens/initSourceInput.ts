@@ -5,6 +5,7 @@ import {
   type CliRenderer,
   type KeyEvent,
 } from "@opentui/core"
+import { theme } from "../theme"
 
 const SCREEN_ID = "source-input-screen"
 
@@ -27,14 +28,14 @@ export function showSourceInput(
   const title = new TextRenderable(renderer, {
     id: "source-input-title",
     content: "Source Repository",
-    fg: "#00FFFF",
+    fg: theme.tokens.title.fg,
   })
   container.add(title)
 
   const hint = new TextRenderable(renderer, {
     id: "source-input-hint",
     content: "Enter source repo (owner/repo or URL) | Enter to confirm",
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
   })
   container.add(hint)
 
@@ -42,15 +43,15 @@ export function showSourceInput(
     id: "source-input-field",
     width: 50,
     value: prefilledSource,
-    backgroundColor: "#1a1a1a",
-    textColor: "#FFFFFF",
-    focusedBackgroundColor: "#2a2a2a",
+    backgroundColor: theme.tokens.input.background,
+    textColor: theme.tokens.input.text.fg,
+    focusedBackgroundColor: theme.tokens.input.focusedBackground,
   })
 
   const errorText = new TextRenderable(renderer, {
     id: "source-input-error",
     content: "",
-    fg: "#FF4444",
+    fg: theme.tokens.error.fg,
   })
   errorText.visible = false
 

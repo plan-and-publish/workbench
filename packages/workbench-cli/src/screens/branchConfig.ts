@@ -8,6 +8,7 @@ import {
   type KeyEvent,
 } from "@opentui/core"
 import type { Repo } from "./repoSelect.ts"
+import { theme } from "../theme"
 
 const SCREEN_ID = "branch-config-screen"
 
@@ -32,14 +33,14 @@ export function showBranchConfig(
   const title = new TextRenderable(renderer, {
     id: "branch-title",
     content: "Configure Branches",
-    fg: "#00FFFF",
+    fg: theme.tokens.title.fg,
   })
   container.add(title)
 
   const hint = new TextRenderable(renderer, {
     id: "branch-hint",
     content: "Tab to navigate between rows | Enter on last row to continue",
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
   })
   container.add(hint)
 
@@ -66,16 +67,16 @@ export function showBranchConfig(
       id: `branch-name-${i}`,
       content: repo.name.substring(0, 34).padEnd(35),
       width: 35,
-      fg: "#FFFFFF",
+      fg: theme.tokens.output.header.fg,
     })
 
     const branchInput = new InputRenderable(renderer, {
       id: `branch-input-${i}`,
       width: 25,
       value: repo.defaultBranch,
-      backgroundColor: "#1a1a1a",
-      textColor: "#FFFFFF",
-      focusedBackgroundColor: "#2a2a2a",
+      backgroundColor: theme.tokens.input.background,
+      textColor: theme.tokens.input.text.fg,
+      focusedBackgroundColor: theme.tokens.input.focusedBackground,
     })
 
     branchInput.on(InputRenderableEvents.CHANGE, (value: string) => {

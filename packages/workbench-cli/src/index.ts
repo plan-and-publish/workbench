@@ -9,6 +9,7 @@ import { executeInitialise, executeCreateRemote, validateInitialiseState, runIni
 import { parseCliArgs, printHelp, type CliArgs } from "./args.ts"
 import { buildRepoFromUrl } from "./utils/repo.ts"
 import type { Repo } from "./screens/repoSelect.ts"
+import { theme, detectMode } from "./theme"
 
 const args = parseCliArgs()
 
@@ -33,6 +34,7 @@ async function runTuiMode(): Promise<void> {
   checkAuth()
   checkRepoRoot()
 
+  await detectMode()
   const renderer: CliRenderer = await createCliRenderer({
     exitOnCtrlC: false,
     exitSignals: ["SIGTERM", "SIGQUIT", "SIGABRT", "SIGHUP"],
@@ -47,7 +49,7 @@ async function runTuiMode(): Promise<void> {
   const versionBadge = new TextRenderable(renderer, {
     id: "version-badge",
     content: `v${version}`,
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
     position: "absolute",
     right: 1,
     bottom: 0,
@@ -68,7 +70,7 @@ async function runTuiMode(): Promise<void> {
         ctrlCNode = new TextRenderable(renderer, {
           id: "ctrl-c-prompt",
           content: "Press Ctrl+C again to exit",
-          fg: "#FFFF00",
+          fg: theme.tokens.ctrlCPrompt.fg,
         })
         renderer.root.add(ctrlCNode)
         ctrlCTimer = setTimeout(() => {
@@ -257,6 +259,7 @@ async function runNonInteractiveInitCmd(args: CliArgs): Promise<void> {
 }
 
 async function runTuiInitMode(args: CliArgs): Promise<void> {
+  await detectMode()
   const renderer: CliRenderer = await createCliRenderer({
     exitOnCtrlC: false,
     exitSignals: ["SIGTERM", "SIGQUIT", "SIGABRT", "SIGHUP"],
@@ -271,7 +274,7 @@ async function runTuiInitMode(args: CliArgs): Promise<void> {
   const versionBadge = new TextRenderable(renderer, {
     id: "version-badge",
     content: `v${version}`,
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
     position: "absolute",
     right: 1,
     bottom: 0,
@@ -292,7 +295,7 @@ async function runTuiInitMode(args: CliArgs): Promise<void> {
         ctrlCNode = new TextRenderable(renderer, {
           id: "ctrl-c-prompt",
           content: "Press Ctrl+C again to exit",
-          fg: "#FFFF00",
+          fg: theme.tokens.ctrlCPrompt.fg,
         })
         renderer.root.add(ctrlCNode)
         ctrlCTimer = setTimeout(() => {

@@ -5,6 +5,7 @@ import {
   ScrollBoxRenderable,
   type CliRenderer,
 } from "@opentui/core"
+import { theme } from "../theme"
 
 const SCREEN_ID = "executing-screen"
 
@@ -39,7 +40,7 @@ export function showExecutingScreen(renderer: CliRenderer): ExecutingScreen {
   const title = new TextRenderable(renderer, {
     id: "executing-title",
     content: "Executing init...",
-    fg: "#00FFFF",
+    fg: theme.tokens.title.fg,
   })
   container.add(title)
 
@@ -69,11 +70,12 @@ export function showExecutingScreen(renderer: CliRenderer): ExecutingScreen {
       lastTextNode.content = line || " "
     } else {
       lineCount++
+      const lineToken = isHeader ? theme.tokens.output.header : theme.tokens.output.line
       const textNode = new TextRenderable(renderer, {
         id: `exec-line-${lineCount}`,
         content: line || " ",
-        fg: isHeader ? "#FFFFFF" : "#666666",
-        attributes: isHeader ? TextAttributes.BOLD : TextAttributes.DIM,
+        fg: lineToken.fg,
+        attributes: lineToken.attributes,
       })
       scrollBox.add(textNode)
       scrollBox.scrollTo(999999)
