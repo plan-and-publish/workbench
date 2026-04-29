@@ -18,7 +18,7 @@
     "release:major": "npm version major --message 'chore: bump version to %s'"
   },
   "dependencies": {
-    "@opentui/core": "^0.1.90",
+    "@opentui/core": "0.1.90",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
