@@ -10,6 +10,7 @@ import {
 } from "@opentui/core"
 import { getOrgs, type GhOrg } from "../utils/gh.ts"
 import { createSpinner } from "../utils/spinner.ts"
+import { theme } from "../theme"
 
 const SCREEN_ID = "init-org-select-screen"
 
@@ -42,7 +43,7 @@ export async function showInitOrgSelect(
     const errText = new TextRenderable(renderer, {
       id: "init-org-error",
       content: `Error fetching orgs: ${err}`,
-      fg: "#FF4444",
+      fg: theme.tokens.error.fg,
     })
     container.add(errText)
     return
@@ -52,14 +53,14 @@ export async function showInitOrgSelect(
   const titleText = new TextRenderable(renderer, {
     id: "init-org-title",
     content: title,
-    fg: "#00FFFF",
+    fg: theme.tokens.title.fg,
   })
   container.add(titleText)
 
   const hint = new TextRenderable(renderer, {
     id: "init-org-hint",
     content: "Type to filter | Tab to switch focus | Enter to select",
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
   })
   container.add(hint)
 
@@ -67,9 +68,9 @@ export async function showInitOrgSelect(
     id: "init-org-filter",
     width: 50,
     placeholder: "Type to filter...",
-    backgroundColor: "#1a1a1a",
-    textColor: "#FFFFFF",
-    focusedBackgroundColor: "#2a2a2a",
+    backgroundColor: theme.tokens.input.background,
+    textColor: theme.tokens.input.text.fg,
+    focusedBackgroundColor: theme.tokens.input.focusedBackground,
   })
 
   const allOptions = orgs.map((o) => ({

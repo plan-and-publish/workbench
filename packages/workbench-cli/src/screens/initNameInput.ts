@@ -6,6 +6,7 @@ import {
   type KeyEvent,
 } from "@opentui/core"
 import { validateRepoName } from "../utils/gh.ts"
+import { theme } from "../theme"
 
 const SCREEN_ID = "init-name-input-screen"
 
@@ -28,14 +29,14 @@ export function showInitNameInput(
   const title = new TextRenderable(renderer, {
     id: "init-name-title",
     content: "Name Your Workbench",
-    fg: "#00FFFF",
+    fg: theme.tokens.title.fg,
   })
   container.add(title)
 
   const hint = new TextRenderable(renderer, {
     id: "init-name-hint",
     content: "Enter a name (alphanumeric, -, ., _) | Enter to confirm",
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
   })
   container.add(hint)
 
@@ -43,15 +44,15 @@ export function showInitNameInput(
     id: "init-name-input",
     width: 50,
     value: prefilledName,
-    backgroundColor: "#1a1a1a",
-    textColor: "#FFFFFF",
-    focusedBackgroundColor: "#2a2a2a",
+    backgroundColor: theme.tokens.input.background,
+    textColor: theme.tokens.input.text.fg,
+    focusedBackgroundColor: theme.tokens.input.focusedBackground,
   })
 
   const errorText = new TextRenderable(renderer, {
     id: "init-name-error",
     content: "",
-    fg: "#FF4444",
+    fg: theme.tokens.error.fg,
   })
   errorText.visible = false
 

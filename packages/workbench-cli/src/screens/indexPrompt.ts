@@ -5,6 +5,7 @@ import {
   BoxRenderable,
   type CliRenderer,
 } from "@opentui/core"
+import { theme } from "../theme"
 
 const SCREEN_ID = "index-prompt-screen"
 
@@ -27,14 +28,14 @@ export function showIndexPrompt(
   const title = new TextRenderable(renderer, {
     id: "index-title",
     content: "Index the repository after setup?",
-    fg: "#00FFFF",
+    fg: theme.tokens.title.fg,
   })
   container.add(title)
 
   const hint = new TextRenderable(renderer, {
     id: "index-hint",
     content: "Running ck --index may take a few minutes",
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
   })
   container.add(hint)
 

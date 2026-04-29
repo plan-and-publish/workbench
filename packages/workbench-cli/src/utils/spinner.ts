@@ -1,4 +1,5 @@
 import { TextRenderable, type CliRenderer } from "@opentui/core"
+import { theme } from "../theme"
 
 const FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 
@@ -11,7 +12,7 @@ export function createSpinner(renderer: CliRenderer, label: string): Spinner {
   const node = new TextRenderable(renderer, {
     id: `spinner-${Date.now()}`,
     content: `${FRAMES[0]} ${label}`,
-    fg: "#00FFFF",
+    fg: theme.tokens.spinner.fg,
   })
   node.visible = false
   renderer.root.add(node)

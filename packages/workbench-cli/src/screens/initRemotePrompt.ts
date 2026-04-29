@@ -5,6 +5,7 @@ import {
   BoxRenderable,
   type CliRenderer,
 } from "@opentui/core"
+import { theme } from "../theme"
 
 const SCREEN_ID = "remote-prompt-screen"
 
@@ -26,14 +27,14 @@ export function showRemotePrompt(
   const title = new TextRenderable(renderer, {
     id: "remote-prompt-title",
     content: "Set up a remote?",
-    fg: "#00FFFF",
+    fg: theme.tokens.title.fg,
   })
   container.add(title)
 
   const hint = new TextRenderable(renderer, {
     id: "remote-prompt-hint",
     content: "A private repo will be created on GitHub and set as origin",
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
   })
   container.add(hint)
 

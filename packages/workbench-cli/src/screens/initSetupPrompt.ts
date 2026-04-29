@@ -5,6 +5,7 @@ import {
   BoxRenderable,
   type CliRenderer,
 } from "@opentui/core"
+import { theme } from "../theme"
 
 const SCREEN_ID = "init-setup-prompt-screen"
 
@@ -26,14 +27,14 @@ export function showInitSetupPrompt(
   const title = new TextRenderable(renderer, {
     id: "init-setup-title",
     content: "Set up your workbench now?",
-    fg: "#00FFFF",
+    fg: theme.tokens.title.fg,
   })
   container.add(title)
 
   const hint = new TextRenderable(renderer, {
     id: "init-setup-hint",
     content: "Running setup configures git submodules for your project",
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
   })
   container.add(hint)
 

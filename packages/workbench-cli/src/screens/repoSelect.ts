@@ -10,6 +10,7 @@ import {
 } from "@opentui/core"
 import { getRepos, type GhRepo } from "../utils/gh.ts"
 import { createSpinner } from "../utils/spinner.ts"
+import { theme } from "../theme"
 
 const SCREEN_ID = "repo-select-screen"
 
@@ -51,7 +52,7 @@ export async function showRepoSelect(
     const errText = new TextRenderable(renderer, {
       id: "repo-error",
       content: `Error fetching repos: ${err}`,
-      fg: "#FF4444",
+      fg: theme.tokens.error.fg,
     })
     container.add(errText)
     return
@@ -62,14 +63,14 @@ export async function showRepoSelect(
   const title = new TextRenderable(renderer, {
     id: "repo-title",
     content: stepTitle,
-    fg: "#00FFFF",
+    fg: theme.tokens.title.fg,
   })
   container.add(title)
 
   const hint = new TextRenderable(renderer, {
     id: "repo-hint",
     content: "Space to toggle | Tab to switch filter/list | Enter to confirm",
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
   })
   container.add(hint)
 
@@ -78,9 +79,9 @@ export async function showRepoSelect(
     id: "repo-filter",
     width: 60,
     placeholder: "Type to filter...",
-    backgroundColor: "#1a1a1a",
-    textColor: "#FFFFFF",
-    focusedBackgroundColor: "#2a2a2a",
+    backgroundColor: theme.tokens.input.background,
+    textColor: theme.tokens.input.text.fg,
+    focusedBackgroundColor: theme.tokens.input.focusedBackground,
   })
 
   const selected = new Set<number>() // indices into repos array

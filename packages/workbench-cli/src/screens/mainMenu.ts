@@ -5,6 +5,7 @@ import {
   BoxRenderable,
   type CliRenderer,
 } from "@opentui/core"
+import { theme } from "../theme"
 
 export interface MainMenuCallbacks {
   onInit: () => void
@@ -35,14 +36,14 @@ export function showMainMenu(
   const title = new TextRenderable(renderer, {
     id: "menu-title",
     content: "workbench",
-    fg: "#00FFFF",
+    fg: theme.tokens.title.fg,
   })
   container.add(title)
 
   const subtitle = new TextRenderable(renderer, {
     id: "menu-subtitle",
     content: "Select a command:",
-    fg: "#888888",
+    fg: theme.tokens.subtitle.fg,
   })
   container.add(subtitle)
 
@@ -100,7 +101,7 @@ function showAlreadyInitializedMessage(renderer: CliRenderer, container: BoxRend
   const msg = new TextRenderable(renderer, {
     id: msgId,
     content: "Already initialized. Remove .workbench/config.yaml to re-init.",
-    fg: "#FF8800",
+    fg: theme.tokens.warning.fg,
   })
   container.add(msg)
 
