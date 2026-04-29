@@ -7,7 +7,6 @@ tools:
   grep: true
   glob: true
   list: true
-  ck_semantic_search: true
   bash: false
   edit: false
   write: false

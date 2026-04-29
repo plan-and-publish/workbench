@@ -22,9 +22,14 @@ This is a presence-only check. Do not parse or read `config.yaml`.
 
 ## ck Availability Check
 
-1. Run `which ck` via Bash to check if the ck CLI is installed
-2. If found, run `ck --status` to verify index readiness
-3. On any failure: warn the user and continue with grep/glob only (graceful degradation — never block execution)
+ck availability is the logical AND of the centralised setting and the system check.
+
+1. **Read the centralised setting.** Read `.workbench/settings.yml`. For each of `tools.ck_semantic_search` and `tools.ck_hybrid_search`, use the value if present; if the file is missing, if there is no `tools` section, or if the key is absent, default to `true`.
+2. **Check the system.** Run `which ck` via Bash. If found, run `ck --status` to verify index readiness. Any failure at this step means `ck_installed_and_ready = false` — warn the user and continue (graceful degradation; never block execution).
+3. **Combine.** Compute resolved per-tool availability:
+   * `ck_semantic_search_available = tools.ck_semantic_search AND ck_installed_and_ready`
+   * `ck_hybrid_search_available = tools.ck_hybrid_search AND ck_installed_and_ready`
+4. **Pass downstream.** Report each resolved value separately in the pathway-context block injected into spawned agents (see "Context Passing Format" below). When a tool is unavailable, indicate whether it is suppressed by config or unavailable on the system.
 
 ## Project Management Configuration
 
@@ -50,7 +55,8 @@ Pathway context: The workbench is in configured project mode (Pathway 2).
 - Primary code scope: projects/ (target project source code)
 - Documentation scope: resources/ (supporting docs and metadata)
 - Workbench source: packages/ (the workbench CLI itself — search only if the task relates to workbench internals)
-- ck semantic search: [available | unavailable — use grep/glob only]
+- ck_semantic_search: [available | unavailable (suppressed by config) | unavailable (ck not installed/ready)]
+- ck_hybrid_search: [available | unavailable (suppressed by config) | unavailable (ck not installed/ready)]
 - When ck is available, prefer ck_semantic_search and ck_hybrid_search as complements to grep/glob for discovering relevant files
 ```
 
@@ -60,5 +66,6 @@ Pathway context: The workbench is in configured project mode (Pathway 2).
 Pathway context: The workbench is in development mode (Pathway 1).
 - Primary code scope: packages/ (workbench source code)
 - Documentation scope: thoughts/ (research, plans, architecture docs)
-- ck semantic search: not applicable in development mode
+- ck_semantic_search: [available | unavailable (suppressed by config) | unavailable (ck not installed/ready)]
+- ck_hybrid_search: [available | unavailable (suppressed by config) | unavailable (ck not installed/ready)]
 ```

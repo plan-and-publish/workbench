@@ -7,7 +7,9 @@
     "project_management": {
       "description": "The project management tool to use for issue tracking and workflow management",
       "type": "string",
-      "enum": ["linear"]
+      "enum": [
+        "linear"
+      ]
     },
     "orchestrator": {
       "description": "Settings for workflow orchestration behavior",
@@ -86,8 +88,31 @@
           "max_auto_answers_per_step": 2
         }
       }
+    },
+    "tools": {
+      "description": "Centralised toggles for shared tools that agents may use",
+      "type": "object",
+      "properties": {
+        "ck_semantic_search": {
+          "description": "When false, suppresses use of ck semantic search across all agents",
+          "type": "boolean",
+          "default": true
+        },
+        "ck_hybrid_search": {
+          "description": "When false, suppresses use of ck hybrid search across all agents",
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false,
+      "default": {
+        "ck_semantic_search": true,
+        "ck_hybrid_search": true
+      }
     }
   },
-  "required": ["project_management"],
+  "required": [
+    "project_management"
+  ],
   "additionalProperties": false
 }

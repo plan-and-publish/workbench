@@ -33,10 +33,10 @@ Detect pathway context:
 - Check if `.workbench/config.yaml` exists in the repository root via Bash.
 - If present: pathway_mode = "configured" (Pathway 2).
 - If absent: pathway_mode = "workbench" (Pathway 1).
-- Run `which ck` via Bash to check if ck CLI is installed.
-- If installed, run `ck --status` to verify index readiness.
-- On ck failure: warn the user and continue (graceful degradation).
-- Store resolved pathway_mode and ck_available for downstream use.
+- Read `.workbench/settings.yml` and resolve `tools.ck_semantic_search` and `tools.ck_hybrid_search`. Treat a missing file, missing `tools` section, or missing individual key as `true` for that key.
+- Run `which ck` via Bash. If found, run `ck --status` to verify index readiness. Any failure means ck is not installed/ready — warn the user and continue (graceful degradation).
+- Resolve per-tool availability as the logical AND of the setting and the system check: `ck_semantic_search_available` and `ck_hybrid_search_available`.
+- Store `pathway_mode`, `ck_semantic_search_available`, and `ck_hybrid_search_available` for downstream use.
 
 Load PM configuration:
 - Read `.workbench/settings.yml` to determine the configured project management tool.
