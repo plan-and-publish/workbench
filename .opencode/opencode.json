@@ -12,26 +12,12 @@
         "linear": {
             "type": "remote",
             "url": "https://mcp.linear.app/mcp",
-            "enabled": true 
-        }
-    },
-    "agent": {
-        "general": {
-            "tools": {
-                "ck_semantic_search": true,
-                "ck_hybrid_search": true
-            }
-        },
-        "explore": {
-            "tools": {
-                "ck_semantic_search": true,
-                "ck_hybrid_search": true
-            }
+            "enabled": true
         }
     },
     "provider": {
-        "openai":{
-            "options" :{
+        "openai": {
+            "options": {
                 "timeout": 1800000
             }
         },
