@@ -1,5 +1,7 @@
 import { TerminalPalette } from "@opentui/core"
 
+const OSC_TIMEOUT_MS = 300
+
 /**
  * Calculate relative luminance of a hex colour.
  * Returns 0.0 (black) to 1.0 (white).
@@ -20,14 +22,14 @@ function luminance(hex: string): number {
  * Falls back to "dark" on any failure (timeout, unsupported terminal, etc.).
  */
 export async function detectTerminalMode(): Promise<"light" | "dark"> {
+  if (!process.stdout.isTTY || !process.stdin.isTTY) return "dark"
   const detector = new TerminalPalette(process.stdin, process.stdout)
   try {
-    const supported = await detector.detectOSCSupport(150)
+    const supported = await detector.detectOSCSupport(OSC_TIMEOUT_MS)
     if (!supported) return "dark"
-
-    const colors = await detector.detect({ timeout: 150 })
+    const colors = await detector.detect({ timeout: OSC_TIMEOUT_MS })
     const bg = colors.defaultBackground
-    if (!bg) return "dark"
+    if (!bg || !/^#[0-9a-fA-F]{6}$/.test(bg)) return "dark"
     return luminance(bg) > 0.5 ? "light" : "dark"
   } catch {
     return "dark"
