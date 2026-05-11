@@ -170,5 +170,6 @@ Update the status to `planned` following the label preservation protocol.
 - Track progress with todos.
 - Do not write a final plan with unresolved open questions.
 - Always separate automated and manual success criteria.
+- use `clean-code` skill
 
 End every response with a clear outcome statement: completed successfully, awaiting user input, or failed with a concise reason.

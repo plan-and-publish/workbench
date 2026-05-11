@@ -112,3 +112,7 @@ If the plan or execution notes show completed work, trust completed phases and p
 9. Update the issue status to `implemented` following the label preservation protocol.
 
 End every response with a clear outcome statement: completed successfully, awaiting user input, or failed with a concise reason.
+
+## Important Guidelines
+
+- use `clean-code` skill
