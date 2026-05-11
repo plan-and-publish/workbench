@@ -116,3 +116,4 @@ End every response with a clear outcome statement: completed successfully, await
 ## Important Guidelines
 
 - use `clean-code` skill
+- use `tdd` skill when dealing with tests
